@@ -1,39 +1,69 @@
 #include "Python3TypeDefinition.h"
 
+NoneType::NoneType() = default;
 
-enum TypeId {
-  IdNoneType = 0, IdInteger = 1, IdDecimal = 2, IdStr = 3, IdBoolean = 4, IdTuple = 5
-};
+Str operator+(const Str &left, const Str &right) {
+  Str res = left;
+  res += right;
+  return res;
+}
+Str operator*(const Integer &integer, const Str &str) {
+  if(integer < 0) return {};
+  Str res;
+  for(Integer i = 0; i < integer; i++)
+    res += str;
+  return res;
+}
+Str operator*(const Str &str, const Integer &integer) {
+  return operator*(integer, str);
+}
+
+Tuple operator+(const Tuple &left, const Tuple &right) {
+  Tuple res = left;
+  res.insert(res.end(), right.begin(), right.end());
+  return res;
+}
+Tuple operator*(const Integer &integer, const Tuple &tuple) {
+  if(integer < 0) return {};
+  Tuple res;
+  for(Integer i = 0; i < integer; i++)
+    res.insert(res.end(), tuple.begin(), tuple.end());
+  return res;
+}
+Tuple operator*(const Tuple &tuple, const Integer &integer) {
+  return operator*(integer, tuple);
+}
 
 
-integer::integer(const integer_type value_): value(value_) {}
-integer::operator integer_type () const {return value;}
-
-decimal::decimal(const double value_): value(value_) {}
-decimal::operator double () const {return value;}
-
-str::str(const std::string &value_): value(value_) {}
-str::operator std::string () const {return value;}
-
-boolean::boolean(const bool value_): value(value_) {}
-boolean::operator bool () const {return value;}
-
-tuple::tuple(const tuple_type &value_): value(value_) {}
-tuple::operator tuple_type () const {return value;}
 
 Python3Type::Python3Type(): type_id(IdNoneType), value(NoneType()) {}
 Python3Type::Python3Type(const Python3Type &other) = default;
 Python3Type::Python3Type(const NoneType &input): type_id(IdNoneType), value(input) {}
-Python3Type::Python3Type(const integer &input): type_id(IdInteger), value(input) {}
-Python3Type::Python3Type(const decimal &input): type_id(IdDecimal), value(input) {}
-Python3Type::Python3Type(const str &input): type_id(IdStr), value(input) {}
-Python3Type::Python3Type(const boolean &input): type_id(IdBoolean), value(input) {}
-Python3Type::Python3Type(const tuple &input): type_id(IdTuple), value(input) {}
+Python3Type::Python3Type(const Integer &input): type_id(IdInteger), value(input) {}
+Python3Type::Python3Type(const Decimal &input): type_id(IdDecimal), value(input) {}
+Python3Type::Python3Type(const Str &input): type_id(IdStr), value(input) {}
+Python3Type::Python3Type(const Boolean &input): type_id(IdBoolean), value(input) {}
+Python3Type::Python3Type(const Tuple &input): type_id(IdTuple), value(input) {}
 
 Python3Type& Python3Type::operator=(const NoneType &input): type_id(IdNoneType), value(input) {return *this;}
-Python3Type& Python3Type::operator=(const integer &input): type_id(IdInteger), value(input) {return *this;}
-Python3Type& Python3Type::operator=(const decimal &input): type_id(IdDecimal), value(input) {return *this;}
-Python3Type& Python3Type::operator=(const str &input): type_id(IdStr), value(input) {return *this;}
-Python3Type& Python3Type::operator=(const boolean &input): type_id(IdBoolean), value(input) {return *this;}
-Python3Type& Python3Type::operator=(const tuple &input): type_id(IdTuple), value(input) {return *this;}
+Python3Type& Python3Type::operator=(const Integer &input): type_id(IdInteger), value(input) {return *this;}
+Python3Type& Python3Type::operator=(const Decimal &input): type_id(IdDecimal), value(input) {return *this;}
+Python3Type& Python3Type::operator=(const Str &input): type_id(IdStr), value(input) {return *this;}
+Python3Type& Python3Type::operator=(const Boolean &input): type_id(IdBoolean), value(input) {return *this;}
+Python3Type& Python3Type::operator=(const Tuple &input): type_id(IdTuple), value(input) {return *this;}
 Python3Type& Python3Type::operator=(const Python3Type &) = default;
+
+Python3Type::operator std::any() const {return value;}
+bool Python3Type::operator==(const Python3Type &other) const {
+  if(type_id != other.type_id) return false;
+  if(type_id == IdNoneType) return true;
+  if(type_id == IdInteger) return std::any_cast<Integer>(value) == std::any_cast<Integer>(other.value);
+  if(type_id == IdDecimal) return std::any_cast<Decimal>(value) == std::any_cast<Decimal>(other.value);
+  if(type_id == IdStr) return std::any_cast<Str>(value) == std::any_cast<Str>(other.value);
+  if(type_id == IdBoolean) return std::any_cast<Boolean>(value) == std::any_cast<Boolean>(other.value);
+  if(type_id == IdTuple) return std::any_cast<Tuple>(value) == std::any_cast<Tuple>(other.value);
+}
+bool Python3Type::operator!=(const Python3Type &other) const {
+  return !operator==(other);
+}
+
