@@ -6,7 +6,7 @@
 #include <any>
 #include <vector>
 
-enum Python3TypeId {
+enum class Python3TypeId {
   IdNoneType = 0, IdInteger = 1, IdDecimal = 2, IdStr = 3, IdBoolean = 4, IdTuple = 5
 };
 
@@ -17,7 +17,7 @@ class Python3Type;
 class NoneType {
 public:
   NoneType();
-}
+};
 using Integer = long long; // TODO: int2048
 using Decimal = double;
 using Str = std::string;
@@ -32,8 +32,8 @@ Tuple operator*(const Integer &, const Tuple &);
 Tuple operator*(const Tuple &, const Integer &);
 
 class Python3Type {
-public:
   std::any value;
+public:
   Python3TypeId type_id;
   // default value: None
   Python3Type();
