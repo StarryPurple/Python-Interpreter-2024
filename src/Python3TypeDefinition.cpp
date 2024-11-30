@@ -1,6 +1,5 @@
 #include "Python3TypeDefinition.h"
 
-NoneType::NoneType() = default;
 
 Str operator+(const Str &left, const Str &right) {
   Str res = left;

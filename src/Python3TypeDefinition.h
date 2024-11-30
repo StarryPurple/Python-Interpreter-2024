@@ -14,10 +14,7 @@ inline std::string Python3Typename[6] = {
  "None", "int", "float", "str", "bool", "tuple"};
 
 class Python3Type;
-class NoneType {
-public:
-  NoneType();
-};
+using NoneType = std::nullptr_t;
 using Integer = long long; // TODO: int2048
 using Decimal = double;
 using Str = std::string;

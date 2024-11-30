@@ -14,16 +14,12 @@ enum Python3TypeId: int;
 
 inline std::set<std::string> reserved_keywords = {"None", "True", "False", "def", "return", "break", "continue", "if",
 "elif", "else", "while", "or", "and", "not"};
-// 1-based function id map. 0 is reserved for main function / input_file.
-// 1, 2, 3, 4 reserved for int(), float(), str(), bool().
-inline std::map<std::string, int> function_id;
 
 class Function;
 class CodeSuite;
 
 // the content of a function.
 class Operation {
-  enum class FunctionOperations: int;
 
   class OperationException; // Exception in invalid operation
   class InvalidVariableException; // Exception in invalid evaluation
@@ -34,18 +30,17 @@ class Operation {
   using Funcdef_arith_eval = void (Python3Type &, const Python3Type &);
   using Funcdef_two_params = Python3Type (const Python3Type &, const Python3Type &);
   using Funcdef_single_param = Python3Type (const Python3Type &);
-  struct OperationDetail {
-    FunctionOperations OperType;
-    std::string func_name; // used when OperType = OperFunc
-    int goto_line; // indicates which line next to go
-    Python3Type &param1;
-    Python3Type &param2; // unused when OperType =
-    Python3Type &target;
-  }; // some may not exist/initialized
 public:
+  enum class FunctionOperations: int;
+  FunctionOperations OperType_;
+  Function *func_; // used at OperFunc
+  int goto_steps_; // used at OperIf and OperWhile. always positive.
+  Python3Type &param1_;
+  Python3Type &param2_;
+  Python3Type &result_;
+   // some may not exist/initialized
   // supports arithmetical type cast of Python3Type objects.
-  class arith_type_cast {
-  public:
+  struct arith_type_cast {
     // Change the Python3Type object into another type.
     // throws OperationException if cast fails.
     // std::invalid_argument, std::out_of_range may happen.
@@ -69,40 +64,44 @@ public:
     OperationInteger, OperationDecimal, OperationStr, OperationBoolean;
   static Python3Type &OperationSubscript(const Python3Type &, int);
   static void OperationPrint(const Python3Type &);
-  static int OperationDecide(const Python3Type &);
+  static int OperationForward(const Python3Type &, int);
+  static int OperationBackward(const Python3Type &, int);
 };
+
+void Execution(const std::vector<Operation> &);
 
 class CodeSuite {
 protected:
-  CodeSuite *parent_suite = nullptr;
-  std::vector<Operation> operations; // in order
-  std::map<std::string, Python3Type> variables; // name -> local variable
-  std::map<std::string, const Function *> functions;  // name -> function
+  CodeSuite *parent_suite_;
+  std::vector<Operation> operations_; // in order
+  std::map<std::string, int> variables_map_; // name -> local variable ordinal
+  std::vector<Python3Type> variables_;
+  std::map<std::string, const Function *> functions_;  // name -> function
 public:
-  explicit CodeSuite(CodeSuite *);
-  // Should not be used in OperationEval.
-  virtual Python3Type& FindVariable(const std::string &);
-  virtual void AddVariable(const std::string &, const Python3Type &);
-  virtual void AddOperation(const Operation &);
-  virtual void AddFunction(const Function *);
+  CodeSuite(CodeSuite *);
+  CodeSuite *parent_suite();
+  const std::vector<Operation> &operations();
+  const std::map<std::string, int> &variables_map();
+  const std::vector<Python3Type> &variables();
+  void AddVariable(const std::string &, const Python3Type &);
+  void AddOperation(const Operation &);
+  void AddFunction(const Function *);
 
-  virtual void Execution();
 };
 
 // Function is a code suite that can be called elsewhere and extra variables added before main part
-class Function: CodeSuite {
-  std::string func_name;
+class Function {
+  std::string func_name_;
+  std::vector<Operation> operations_;
+  std::map<std::string, Python3Type> variables_;
+  std::map<std::string, const Function> functions_;
 public:
   Function(const std::string &);
-  virtual void AddFunction(const Function *) override = delete;
+  const std::vector<Operation> &operations_list();
   std::string name() const;
-  virtual void Execution() override;
+  void AddVariable(const std::string &, const Python3Type &);
+  void AddOperation(const Operation &);
 };
-
-
-// The structure:
-// Function 1:
-
 
 
 #endif // PYTHON_INTERPRETER_BASIC_OPERATION_H

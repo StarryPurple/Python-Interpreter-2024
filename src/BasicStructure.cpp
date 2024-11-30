@@ -1,7 +1,6 @@
-#include "BasicOperation.h"
+#include "BasicStructure.h"
 
-#include <Exceptions.h>
-#include <support/CPPUtils.h>
+#include <CodeInterpreter.h>
 
 
 enum Operation::FunctionOperations {
@@ -13,7 +12,7 @@ enum Operation::FunctionOperations {
   OprInt = 22, OprDec = 23, OprStr = 24, OprBool = 25,
   OprPrint = 26,
   OprFunc = 27,
-  OprDecide = 28
+  OprForward = 28, OprBackward = 29
 };
 
 class Operation::OperationException: std::exception {
@@ -391,8 +390,8 @@ void Operation::OperationPrint(const Python3Type &obj) {
     std::cout << "]";
   }
 }
-
-int Operation::OperationDecide(const Python3Type &obj) {
+// F? steps
+int Operation::OperationForward(const Python3Type &obj, int steps) {
   bool res;
   if(obj.type_id == Python3TypeId::IdInteger)
     res = std::any_cast<Integer>(obj);
@@ -400,40 +399,164 @@ int Operation::OperationDecide(const Python3Type &obj) {
     res = std::any_cast<Decimal>(obj);
   else if(obj.type_id == Python3TypeId::IdBoolean)
     res = std::any_cast<Boolean>(obj);
-  else throw OperationException(Python3Typename[static_cast<int>(obj.type_id)], "not");
-  if()
+  else throw OperationException(Python3Typename[static_cast<int>(obj.type_id)], "goto forward");
+  return (res ? 0 : steps);
 }
-CodeSuite::CodeSuite(CodeSuite *parent) {
-  parent_suite = parent;
+// B? steps
+int Operation::OperationBackward(const Python3Type &obj, int steps) {
+  bool res;
+  if(obj.type_id == Python3TypeId::IdInteger)
+    res = std::any_cast<Integer>(obj);
+  else if(obj.type_id == Python3TypeId::IdDecimal)
+    res = std::any_cast<Decimal>(obj);
+  else if(obj.type_id == Python3TypeId::IdBoolean)
+    res = std::any_cast<Boolean>(obj);
+  else throw OperationException(Python3Typename[static_cast<int>(obj.type_id)], "goto backward");
+  return (res ? steps : 0);
 }
 
-Python3Type& CodeSuite::FindVariable(const std::string& var_name) {
-  CodeSuite *cur_suite = this;
-  while(cur_suite != nullptr) {
-    auto result = cur_suite->variables.find(var_name);
-    if(result != variables.end())
-      return result->second;
-    else
-      cur_suite = cur_suite->parent_suite;
-  }
-  // failure
-  throw std::runtime_error("Undefined variable");
+
+CodeSuite::CodeSuite(CodeSuite *parent) {
+  parent_suite_ = parent;
 }
+CodeSuite *CodeSuite::parent_suite() {
+  return parent_suite_;
+}
+const std::vector<Operation> &CodeSuite::operations() {
+  return operations_;
+}
+const std::map<std::string, int> &CodeSuite::variables_map() {
+  return variables_map_;
+}
+const std::vector<Python3Type> &CodeSuite::variables() {
+  return variables_;
+}
+
+
+
 void CodeSuite::AddOperation(const Operation &oper) {
-  operations.push_back(oper);
+  operations_.push_back(oper);
 }
 void CodeSuite::AddVariable(const std::string &name, const Python3Type &var) {
-  variables.insert({name, var});
+  variables_map_.insert({name, variables_.size()});
+  variables_.push_back(var);
 }
 void CodeSuite::AddFunction(const Function *func) {
-  functions.insert({func->name(), func});
+  functions_.insert({func->name(), func});
 }
 
 std::string Function::name() const {
-  return func_name;
+  return func_name_;
 }
 Function::Function(const std::string &funcname) {
-  func_name = funcname;
+  func_name_ = funcname;
+}
+const std::vector<Operation> &Function::operations_list() {
+  return operations_;
 }
 
+// It's a big project.
+void Execution(const std::vector<Operation> &operations) {
+  for(int step = 0; step < operations.size(); ++step) {
+    const Operation &operation = operations[step];
+    switch(operation.OperType_) {
+      case Operation::FunctionOperations::OprEval:
+        Operation::OperationEval(operation.param1_, operation.param2_);
+      break;
 
+      case Operation::FunctionOperations::OprAdd:
+        operation.result_ = Operation::OperationAdd(operation.param1_, operation.param2_);
+      break;
+      case Operation::FunctionOperations::OprSub:
+        operation.result_ = Operation::OperationSub(operation.param1_, operation.param2_);
+      break;
+      case Operation::FunctionOperations::OprMul:
+        operation.result_ = Operation::OperationMul(operation.param1_, operation.param2_);
+      break;
+      case Operation::FunctionOperations::OprDiv:
+        operation.result_ = Operation::OperationDiv(operation.param1_, operation.param2_);
+      break;
+      case Operation::FunctionOperations::OprIDiv:
+        operation.result_ = Operation::OperationIDiv(operation.param1_, operation.param2_);
+      break;
+      case Operation::FunctionOperations::OprMod:
+        operation.result_ = Operation::OperationMod(operation.param1_, operation.param2_);
+      break;
+
+      case Operation::FunctionOperations::OprAddEval:
+        Operation::OperationAddEval(operation.param1_, operation.param2_);
+      break;
+      case Operation::FunctionOperations::OprSubEval:
+        Operation::OperationSubEval(operation.param1_, operation.param2_);
+      break;
+      case Operation::FunctionOperations::OprMulEval:
+        Operation::OperationMulEval(operation.param1_, operation.param2_);
+      break;
+      case Operation::FunctionOperations::OprDivEval:
+        Operation::OperationDivEval(operation.param1_, operation.param2_);
+      break;
+      case Operation::FunctionOperations::OprIDivEval:
+        Operation::OperationIDivEval(operation.param1_, operation.param2_);
+      break;
+      case Operation::FunctionOperations::OprModEval:
+        Operation::OperationModEval(operation.param1_, operation.param2_);
+
+      case Operation::FunctionOperations::OprEqual:
+        operation.result_ = Operation::OperationEqual(operation.param1_, operation.param2_);
+      break;
+      case Operation::FunctionOperations::OprNEqual:
+        operation.result_ = Operation::OperationNEqual(operation.param1_, operation.param2_);
+      break;
+      case Operation::FunctionOperations::OprLesser:
+        operation.result_ = Operation::OperationLesser(operation.param1_, operation.param2_);
+      break;
+      case Operation::FunctionOperations::OprGreater:
+        operation.result_ = Operation::OperationGreater(operation.param1_, operation.param2_);
+      break;
+      case Operation::FunctionOperations::OprNGreater:
+        operation.result_ = Operation::OperationNGreater(operation.param1_, operation.param2_);
+      break;
+      case Operation::FunctionOperations::OprNLesser:
+        operation.result_ = Operation::OperationNLesser(operation.param1_, operation.param2_);
+      break;
+
+      case Operation::FunctionOperations::OprAnd:
+        operation.result_ = Operation::OperationAnd(operation.param1_, operation.param2_);
+      break;
+      case Operation::FunctionOperations::OprOr:
+        operation.result_ = Operation::OperationOr(operation.param1_, operation.param2_);
+      break;
+      case Operation::FunctionOperations::OprNot:
+        operation.result_ = Operation::OperationNot(operation.param1_);
+      break;
+
+      case Operation::FunctionOperations::OprInt:
+        operation.result_ = Operation::OperationInteger(operation.param1_);
+      break;
+      case Operation::FunctionOperations::OprDec:
+        operation.result_ = Operation::OperationDecimal(operation.param1_);
+      break;
+      case Operation::FunctionOperations::OprStr:
+        operation.result_ = Operation::OperationStr(operation.param1_);
+      break;
+      case Operation::FunctionOperations::OprBool:
+        operation.result_ = Operation::OperationBoolean(operation.param1_);
+      break;
+
+      case Operation::FunctionOperations::OprPrint:
+        Operation::OperationPrint(operation.param1_);
+      break;
+      case Operation::FunctionOperations::OprFunc:
+        Execution(operation.func_->operations_list()); // TODO: logic may change in future
+      break;
+      case Operation::FunctionOperations::OprForward:
+        step += Operation::OperationForward(operation.param1_, operation.goto_steps_);
+      break;
+      case Operation::FunctionOperations::OprBackward:
+        step -= Operation::OperationBackward(operation.param1_, operation.goto_steps_);
+
+      default:
+        throw std::runtime_error("What? How did you get here?");
+    }
+  }
+}
