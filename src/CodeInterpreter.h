@@ -8,30 +8,28 @@
 class CodeInterpreter {
   static const Python3Type ConstTrue, ConstFalse, ConstNone;
 
-  std::vector<Function> functions; // the global function storage
-  std::map<std::string, int> function_list; // name -> function ordinal
+  std::vector<Operation> operations_{}; // global operation stack.
 
-  std::vector<CodeSuite> code_suites; // the current code suite stack.
-  std::map<std::string, int> code_suite_list;
+  std::vector<Function> functions_{}; // the global function storage
+  std::map<std::string, int> function_map_{}; // name -> function ordinal
+  Function *main_function_{}; // MainFunction.
+  Function *cur_function_{}; // initially MainFunction.
+  Function *cur_function_def_{nullptr}; // current function under definition. not nullptr only when funcdef_mode is on.
 
-  CodeSuite MainSuite; // __main__ in Shell-like form. It's parent_suit is nullptr;
-  Python3Type TempVar; // the global, shared storage for variables.
+  Python3Type temp_var_{}; // the global, shared storage for variables.
 
-  bool funcdef_mode;
+  bool funcdef_mode; // when it's on, new operations shouldn't be added to operations_.
 
 public:
   CodeInterpreter();
-  static const Python3Type& FindVariable(CodeSuite *, const std::string &, bool &);
+  ~CodeInterpreter();
+  static const Python3Type& FindVariable(Function *, const std::string &, bool &);
+  void DefineVariable(const std::string &, const Python3Type &);
   void InsertOperation(const Operation &);
-  void StartCodeSuite();
-  void EndCodeSuite();
   void StartFunctionDef(const std::string &);
   void EndFunctionDef();
-  void StartFunction(const Function *);
-  void EndFunction();
+  void RunMainFunction();
 };
-
-inline CodeInterpreter interpreter;
 
 
 #endif // CODE_INTERPRETER_H

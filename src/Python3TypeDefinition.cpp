@@ -65,4 +65,7 @@ bool Python3Type::operator==(const Python3Type &other) const {
 bool Python3Type::operator!=(const Python3Type &other) const {
   return !operator==(other);
 }
-
+// Identity check.
+bool Python3Type::is(const Python3Type &other) const {
+  return this == &other;
+}

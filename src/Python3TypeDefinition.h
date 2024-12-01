@@ -53,6 +53,8 @@ public:
   operator std::any () const;
   bool operator==(const Python3Type &) const;
   bool operator!=(const Python3Type &) const;
+
+  bool is(const Python3Type &) const;
 };
 
 

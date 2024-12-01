@@ -3,6 +3,8 @@
 std::any EvalVisitor::visitFile_input(Python3Parser::File_inputContext *ctx) override {
   for(auto stmt_ctx: ctx->stmt())
     visit(stmt_ctx);
+  // Compiling finished. Run the program.
+  code_interpreter_.RunMainFunction();
   // temporarily nothing to return
   return nullptr;
 }

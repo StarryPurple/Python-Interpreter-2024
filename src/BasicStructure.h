@@ -16,7 +16,7 @@ inline std::set<std::string> reserved_keywords = {"None", "True", "False", "def"
 "elif", "else", "while", "or", "and", "not"};
 
 class Function;
-class CodeSuite;
+class VariableSuite;
 
 // the content of a function.
 class Operation {
@@ -68,36 +68,21 @@ public:
   static int OperationBackward(const Python3Type &, int);
 };
 
-void Execution(const std::vector<Operation> &);
+void ExecuteOperations(const std::vector<Operation> &);
 
-class CodeSuite {
-protected:
-  CodeSuite *parent_suite_;
-  std::vector<Operation> operations_; // in order
-  std::map<std::string, int> variables_map_; // name -> local variable ordinal
-  std::vector<Python3Type> variables_;
-  std::map<std::string, const Function *> functions_;  // name -> function
-public:
-  CodeSuite(CodeSuite *);
-  CodeSuite *parent_suite();
-  const std::vector<Operation> &operations();
-  const std::map<std::string, int> &variables_map();
-  const std::vector<Python3Type> &variables();
-  void AddVariable(const std::string &, const Python3Type &);
-  void AddOperation(const Operation &);
-  void AddFunction(const Function *);
-
-};
 
 // Function is a code suite that can be called elsewhere and extra variables added before main part
 class Function {
   std::string func_name_;
   std::vector<Operation> operations_;
-  std::map<std::string, Python3Type> variables_;
-  std::map<std::string, const Function> functions_;
+  std::map<std::string, int> variables_map_; // local variable storage
+  std::vector<Python3Type> variables_;
 public:
+  Function *parent_function{nullptr};
   Function(const std::string &);
-  const std::vector<Operation> &operations_list();
+  const std::vector<Operation> &operations();
+  const std::map<std::string, int> &variables_map();
+  const std::vector<Python3Type> &variables();
   std::string name() const;
   void AddVariable(const std::string &, const Python3Type &);
   void AddOperation(const Operation &);

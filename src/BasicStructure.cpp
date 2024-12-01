@@ -415,48 +415,9 @@ int Operation::OperationBackward(const Python3Type &obj, int steps) {
   return (res ? steps : 0);
 }
 
-
-CodeSuite::CodeSuite(CodeSuite *parent) {
-  parent_suite_ = parent;
-}
-CodeSuite *CodeSuite::parent_suite() {
-  return parent_suite_;
-}
-const std::vector<Operation> &CodeSuite::operations() {
-  return operations_;
-}
-const std::map<std::string, int> &CodeSuite::variables_map() {
-  return variables_map_;
-}
-const std::vector<Python3Type> &CodeSuite::variables() {
-  return variables_;
-}
-
-
-
-void CodeSuite::AddOperation(const Operation &oper) {
-  operations_.push_back(oper);
-}
-void CodeSuite::AddVariable(const std::string &name, const Python3Type &var) {
-  variables_map_.insert({name, variables_.size()});
-  variables_.push_back(var);
-}
-void CodeSuite::AddFunction(const Function *func) {
-  functions_.insert({func->name(), func});
-}
-
-std::string Function::name() const {
-  return func_name_;
-}
-Function::Function(const std::string &funcname) {
-  func_name_ = funcname;
-}
-const std::vector<Operation> &Function::operations_list() {
-  return operations_;
-}
-
-// It's a big project.
-void Execution(const std::vector<Operation> &operations) {
+// It's the core function of the Interpreter.
+// sequentially conduct an operation sequence.
+void ExecuteOperations(const std::vector<Operation> &operations) {
   for(int step = 0; step < operations.size(); ++step) {
     const Operation &operation = operations[step];
     switch(operation.OperType_) {
@@ -547,7 +508,7 @@ void Execution(const std::vector<Operation> &operations) {
         Operation::OperationPrint(operation.param1_);
       break;
       case Operation::FunctionOperations::OprFunc:
-        Execution(operation.func_->operations_list()); // TODO: logic may change in future
+        Execution(operation.func_->operations()); // TODO: logic may change in future
       break;
       case Operation::FunctionOperations::OprForward:
         step += Operation::OperationForward(operation.param1_, operation.goto_steps_);
@@ -560,3 +521,30 @@ void Execution(const std::vector<Operation> &operations) {
     }
   }
 }
+
+
+std::string Function::name() const {
+  return func_name_;
+}
+Function::Function(const std::string &name) {
+  func_name_ = name;
+}
+const std::vector<Operation> &Function::operations() {
+  return operations_;
+}
+const std::map<std::string, int> &Function::variables_map() {
+  return variables_map_;
+}
+const std::vector<Python3Type> &Function::variables() {
+  return variables_;
+}
+void Function::AddVariable(const std::string &name, const Python3Type &init_value) {
+  if(variables_map_.find(name) != variables_map_.end())
+    throw std::runtime_error("Don't add existing variable, dev.");
+  variables_map_.insert({name, variables_.size()});
+  variables_.push_back(init_value);
+}
+void Function::AddOperation(const Operation &operation) {
+  operations_.push_back(operation);
+}
+
