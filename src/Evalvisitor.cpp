@@ -3,34 +3,51 @@
 std::any EvalVisitor::visitFile_input(Python3Parser::File_inputContext *ctx) override {
   for(auto stmt_ctx: ctx->stmt())
     visit(stmt_ctx);
-  // Compiling finished. Run the program.
+  // Compiling finished. Run the program. HA, HA, HA.
+  // Since when did I change it into a compiler?
+  // Right. It can't be one.
   code_interpreter_.RunMainFunction();
-  // temporarily nothing to return
+  // nothing to return.
   return nullptr;
 }
 std::any EvalVisitor::visitFuncdef(Python3Parser::FuncdefContext *ctx) override {
-
+  code_interpreter_.StartFunctionDef(ctx->NAME()->toString());
+  visit(ctx->parameters());
+  visit(ctx->suite());
+  code_interpreter_.EndFunctionDef();
+  // nothing to return.
+  return nullptr;
 }
 std::any EvalVisitor::visitParameters(Python3Parser::ParametersContext *ctx) override {
-
+  if(auto typed_args_list_ctx = ctx->typedargslist(); typed_args_list_ctx != nullptr)
+    visit(typed_args_list_ctx);
+  // nothing to return.
+  return nullptr;
 }
 std::any EvalVisitor::visitTypedargslist(Python3Parser::TypedargslistContext *ctx) override {
-
+  int param_cnt = ctx->tfpdef().size();
+  int inited_param_cnt = ctx->test().size();
+  int uninited_param_cnt = param_cnt - inited_param_cnt;
+  for(int i = 0; i < uninited_param_cnt; i++) {
+    auto param_name = std::any_cast<std::string>(visit(ctx->tfpdef(i)));
+    code_interpreter_.DefineVariable(param_name, CodeInterpreter::ConstNone);
+  }
+  for(int i = 0; i < inited_param_cnt; i++)
 }
 std::any EvalVisitor::visitTfpdef(Python3Parser::TfpdefContext *ctx) override {
-
+  return ctx->NAME()->toString();
 }
 std::any EvalVisitor::visitStmt(Python3Parser::StmtContext *ctx) override {
   if(auto simple_stmt_ctx = ctx->simple_stmt(); simple_stmt_ctx != nullptr)
     visit(simple_stmt_ctx);
   else if(auto compound_stmt_ctx = ctx->compound_stmt(); compound_stmt_ctx != nullptr) // redundant
     visit(compound_stmt_ctx);
-  // temporarily nothing to return.
+  // nothing to return.
   return nullptr;
 }
 std::any EvalVisitor::visitSimple_stmt(Python3Parser::Simple_stmtContext *ctx) override {
   visit(ctx->small_stmt());
-  // temporarily nothing to return.
+  // nothing to return.
   return nullptr;
 }
 std::any EvalVisitor::visitSmall_stmt(Python3Parser::Small_stmtContext *ctx) override {
@@ -38,7 +55,7 @@ std::any EvalVisitor::visitSmall_stmt(Python3Parser::Small_stmtContext *ctx) ove
     visit(expr_stmt_ctx);
   else if(auto flow_stmt_ctx = ctx->flow_stmt(); flow_stmt_ctx != nullptr)
     visit(flow_stmt_ctx);
-  // temporarily nothing to return.
+  // nothing to return.
   return nullptr;
 }
 std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) override {

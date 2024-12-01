@@ -2,19 +2,6 @@
 
 #include <CodeInterpreter.h>
 
-
-enum Operation::FunctionOperations {
-  OprEval = 0,
-  OprAdd = 1, OprSub = 2, OprMul = 3, OprDiv = 4, OprIDiv = 5, OprMod = 6,
-  OprAddEval = 7, OprSubEval = 8, OprMulEval = 9, OprDivEval = 10, OprIDivEval = 11, OprModEval = 12,
-  OprEqual = 13, OprNEqual = 14, OprLesser = 15, OprGreater = 16, OprNGreater = 17, OprNLesser = 18,
-  OprAnd = 19, OprOr = 20, OprNot = 21,
-  OprInt = 22, OprDec = 23, OprStr = 24, OprBool = 25,
-  OprPrint = 26,
-  OprFunc = 27,
-  OprForward = 28, OprBackward = 29
-};
-
 class Operation::OperationException: std::exception {
   std::string type1, type2, operation;
   int operand_cnt;
@@ -130,6 +117,12 @@ void Operation::arith_type_cast::operator()(Python3Type &left, Python3Type &righ
   right = arith_type_cast()(right, target_id);
 }
 
+Operation::Operation(
+  FunctionOperations oper_type, Function *function, int steps,
+  Python3Type *param1, Python3Type *param2, Python3Type *result):
+  OperType_(oper_type), func_(function), goto_steps_(steps),
+  param1_(param1), param2_(param2), result_(result) {
+}
 
 
 // Attention: @target must be already defined
@@ -415,113 +408,6 @@ int Operation::OperationBackward(const Python3Type &obj, int steps) {
   return (res ? steps : 0);
 }
 
-// It's the core function of the Interpreter.
-// sequentially conduct an operation sequence.
-void ExecuteOperations(const std::vector<Operation> &operations) {
-  for(int step = 0; step < operations.size(); ++step) {
-    const Operation &operation = operations[step];
-    switch(operation.OperType_) {
-      case Operation::FunctionOperations::OprEval:
-        Operation::OperationEval(operation.param1_, operation.param2_);
-      break;
-
-      case Operation::FunctionOperations::OprAdd:
-        operation.result_ = Operation::OperationAdd(operation.param1_, operation.param2_);
-      break;
-      case Operation::FunctionOperations::OprSub:
-        operation.result_ = Operation::OperationSub(operation.param1_, operation.param2_);
-      break;
-      case Operation::FunctionOperations::OprMul:
-        operation.result_ = Operation::OperationMul(operation.param1_, operation.param2_);
-      break;
-      case Operation::FunctionOperations::OprDiv:
-        operation.result_ = Operation::OperationDiv(operation.param1_, operation.param2_);
-      break;
-      case Operation::FunctionOperations::OprIDiv:
-        operation.result_ = Operation::OperationIDiv(operation.param1_, operation.param2_);
-      break;
-      case Operation::FunctionOperations::OprMod:
-        operation.result_ = Operation::OperationMod(operation.param1_, operation.param2_);
-      break;
-
-      case Operation::FunctionOperations::OprAddEval:
-        Operation::OperationAddEval(operation.param1_, operation.param2_);
-      break;
-      case Operation::FunctionOperations::OprSubEval:
-        Operation::OperationSubEval(operation.param1_, operation.param2_);
-      break;
-      case Operation::FunctionOperations::OprMulEval:
-        Operation::OperationMulEval(operation.param1_, operation.param2_);
-      break;
-      case Operation::FunctionOperations::OprDivEval:
-        Operation::OperationDivEval(operation.param1_, operation.param2_);
-      break;
-      case Operation::FunctionOperations::OprIDivEval:
-        Operation::OperationIDivEval(operation.param1_, operation.param2_);
-      break;
-      case Operation::FunctionOperations::OprModEval:
-        Operation::OperationModEval(operation.param1_, operation.param2_);
-
-      case Operation::FunctionOperations::OprEqual:
-        operation.result_ = Operation::OperationEqual(operation.param1_, operation.param2_);
-      break;
-      case Operation::FunctionOperations::OprNEqual:
-        operation.result_ = Operation::OperationNEqual(operation.param1_, operation.param2_);
-      break;
-      case Operation::FunctionOperations::OprLesser:
-        operation.result_ = Operation::OperationLesser(operation.param1_, operation.param2_);
-      break;
-      case Operation::FunctionOperations::OprGreater:
-        operation.result_ = Operation::OperationGreater(operation.param1_, operation.param2_);
-      break;
-      case Operation::FunctionOperations::OprNGreater:
-        operation.result_ = Operation::OperationNGreater(operation.param1_, operation.param2_);
-      break;
-      case Operation::FunctionOperations::OprNLesser:
-        operation.result_ = Operation::OperationNLesser(operation.param1_, operation.param2_);
-      break;
-
-      case Operation::FunctionOperations::OprAnd:
-        operation.result_ = Operation::OperationAnd(operation.param1_, operation.param2_);
-      break;
-      case Operation::FunctionOperations::OprOr:
-        operation.result_ = Operation::OperationOr(operation.param1_, operation.param2_);
-      break;
-      case Operation::FunctionOperations::OprNot:
-        operation.result_ = Operation::OperationNot(operation.param1_);
-      break;
-
-      case Operation::FunctionOperations::OprInt:
-        operation.result_ = Operation::OperationInteger(operation.param1_);
-      break;
-      case Operation::FunctionOperations::OprDec:
-        operation.result_ = Operation::OperationDecimal(operation.param1_);
-      break;
-      case Operation::FunctionOperations::OprStr:
-        operation.result_ = Operation::OperationStr(operation.param1_);
-      break;
-      case Operation::FunctionOperations::OprBool:
-        operation.result_ = Operation::OperationBoolean(operation.param1_);
-      break;
-
-      case Operation::FunctionOperations::OprPrint:
-        Operation::OperationPrint(operation.param1_);
-      break;
-      case Operation::FunctionOperations::OprFunc:
-        Execution(operation.func_->operations()); // TODO: logic may change in future
-      break;
-      case Operation::FunctionOperations::OprForward:
-        step += Operation::OperationForward(operation.param1_, operation.goto_steps_);
-      break;
-      case Operation::FunctionOperations::OprBackward:
-        step -= Operation::OperationBackward(operation.param1_, operation.goto_steps_);
-
-      default:
-        throw std::runtime_error("What? How did you get here?");
-    }
-  }
-}
-
 
 std::string Function::name() const {
   return func_name_;
@@ -532,19 +418,52 @@ Function::Function(const std::string &name) {
 const std::vector<Operation> &Function::operations() {
   return operations_;
 }
+void Function::AppendOperation(const Operation &operation) {
+  operations_.push_back(operation);
+}
+std::vector<Python3Type> &Function::variables() {
+  return variables_;
+}
 const std::map<std::string, int> &Function::variables_map() {
   return variables_map_;
 }
-const std::vector<Python3Type> &Function::variables() {
-  return variables_;
-}
-void Function::AddVariable(const std::string &name, const Python3Type &init_value) {
+void Function::DefineVariable(const std::string &name, const Python3Type &init_value) {
   if(variables_map_.find(name) != variables_map_.end())
     throw std::runtime_error("Don't add existing variable, dev.");
   variables_map_.insert({name, variables_.size()});
   variables_.push_back(init_value);
 }
-void Function::AddOperation(const Operation &operation) {
+
+
+void CodeSuite::DefineVariable(const std::string &name, const Python3Type &init_value) {
+  if(variables_map_.find(name) != variables_map_.end())
+    throw std::runtime_error("Don't add existing variable, dev.");
+  variables_map_.insert({name, variables_.size()});
+  variables_.push_back(init_value);
+}
+CodeSuite::CodeSuite(CodeSuite *parent) {
+  parent_suite_ = parent;
+}
+CodeSuite::CodeSuite(CodeSuite *parent, Function *function) {
+  parent_suite_ = parent;
+  operations_ = function->operations();
+  variables_map_ = function->variables_map();
+  variables_ = function->variables();
+}
+
+CodeSuite *CodeSuite::parent_suite() {
+  return parent_suite_;
+}
+const std::map<std::string, int> &CodeSuite::variables_map() {
+  return variables_map_;
+}
+std::vector<Python3Type> &CodeSuite::variables() {
+  return variables_;
+}
+void CodeSuite::AppendOperation(const Operation &operation) {
   operations_.push_back(operation);
+}
+const std::vector<Operation> &CodeSuite::operations() {
+  return operations_;
 }
 
