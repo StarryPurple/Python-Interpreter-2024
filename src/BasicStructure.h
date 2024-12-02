@@ -9,14 +9,12 @@
 #include <map>
 #include <cassert>
 
-enum Python3TypeId: int;
-
 
 inline std::set<std::string> reserved_keywords = {"None", "True", "False", "def", "return", "break", "continue", "if",
 "elif", "else", "while", "or", "and", "not"};
 
 class Function;
-class VariableSuite;
+class CodeSuite;
 
 // the content of a function.
 class Operation {
@@ -32,25 +30,28 @@ class Operation {
   using Funcdef_single_param = Python3Type (const Python3Type &);
 public:
   enum class FunctionOperations {
-    OprEval = 0,
-    OprAdd = 1, OprSub = 2, OprMul = 3, OprDiv = 4, OprIDiv = 5, OprMod = 6,
-    OprAddEval = 7, OprSubEval = 8, OprMulEval = 9, OprDivEval = 10, OprIDivEval = 11, OprModEval = 12,
-    OprEqual = 13, OprNEqual = 14, OprLesser = 15, OprGreater = 16, OprNGreater = 17, OprNLesser = 18,
-    OprAnd = 19, OprOr = 20, OprNot = 21,
-    OprInt = 22, OprDec = 23, OprStr = 24, OprBool = 25,
-    OprPrint = 26,
-    OprFunc = 27,
-    OprForward = 28, OprBackward = 29
+    OprEval,
+    OprAdd, OprSub, OprMul, OprDiv, OprIDiv, OprMod,
+    OprEqual, OprNEqual, OprLesser, OprGreater, OprNGreater, OprNLesser,
+    OprAnd, OprOr, OprNot, OprNeg,
+    OprInt, OprDec, OprStr, OprBool,
+    OprPrint,
+    OprFunc,
+    OprForward, OprBackward,
+    OprReturn,
+    OprPushStack, OprPopStack,
+    OprDefVar,
   };
 
   FunctionOperations OperType_;
-  Function *func_; // used at OperFunc
-  int goto_steps_; // used at OperIf and OperWhile. always positive.
   Python3Type *param1_;
   Python3Type *param2_;
   Python3Type *result_;
+  Function *func_; // used at OperFunc
+  int goto_steps_; // used at OperIf and OperWhile. always positive.
+  CodeSuite *current_suite_; // used at OperDefineVariable
    // some may not exist/initialized
-  Operation(FunctionOperations, Function *, int, Python3Type *, Python3Type *, Python3Type *);
+  Operation(FunctionOperations, Python3Type *, Python3Type *, Python3Type *);
   // supports arithmetical type cast of Python3Type objects.
   struct arith_type_cast {
     // Change the Python3Type object into another type.
@@ -64,20 +65,20 @@ public:
     operator Python3Type() const;
   };
   static Funcdef_arith_eval
-    OperationEval,
-    OperationAddEval, OperationSubEval, OperationMulEval, OperationDivEval, OperationIDivEval, OperationModEval;
+    OperationEval;
   static Funcdef_arith
     OperationAdd, OperationSub, OperationMul, OperationDiv, OperationIDiv, OperationMod,
     OperationEqual, OperationNEqual, OperationLesser, OperationGreater, OperationNGreater, OperationNLesser;
   static Funcdef_two_params
     OperationAnd, OperationOr;
   static Funcdef_single_param
-    OperationNot,
+    OperationNot, OperationNegative,
     OperationInteger, OperationDecimal, OperationStr, OperationBoolean;
   static Python3Type &OperationSubscript(const Python3Type &, int);
   static void OperationPrint(const Python3Type &);
   static int OperationForward(const Python3Type &, int);
   static int OperationBackward(const Python3Type &, int);
+  static void OperationDefineVariable(const std::string &, CodeSuite *);
 };
 
 
@@ -112,6 +113,7 @@ public:
   const std::map<std::string, int> &variables_map();
   std::vector<Python3Type> &variables();
   void DefineVariable(const std::string &, const Python3Type &);
+  void EraseExistingOperations();
 };
 
 

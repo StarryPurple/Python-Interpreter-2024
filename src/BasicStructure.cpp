@@ -118,9 +118,9 @@ void Operation::arith_type_cast::operator()(Python3Type &left, Python3Type &righ
 }
 
 Operation::Operation(
-  FunctionOperations oper_type, Function *function, int steps,
+  FunctionOperations oper_type,
   Python3Type *param1, Python3Type *param2, Python3Type *result):
-  OperType_(oper_type), func_(function), goto_steps_(steps),
+  OperType_(oper_type),
   param1_(param1), param2_(param2), result_(result) {
 }
 
@@ -197,25 +197,6 @@ Python3Type Operation::OperationMod(Python3Type left, Python3Type right) {
     throw OperationException("double?", "double?", "%");
   if(left.type_id == Python3TypeId::IdBoolean)
     return static_cast<Integer>(std::any_cast<Boolean>(left) % std::any_cast<Boolean>(right));
-}
-
-void Operation::OperationAddEval(Python3Type &obj, const Python3Type &other) {
-  obj = OperationAdd(obj, other);
-}
-void Operation::OperationSubEval(Python3Type &obj, const Python3Type &other) {
-  obj = OperationSub(obj, other);
-}
-void Operation::OperationMulEval(Python3Type &obj, const Python3Type &other) {
-  obj = OperationMul(obj, other);
-}
-void Operation::OperationDivEval(Python3Type &obj, const Python3Type &other) {
-  obj = OperationDiv(obj, other);
-}
-void Operation::OperationIDivEval(Python3Type &obj, const Python3Type &other) {
-  obj = OperationIDiv(obj, other);
-}
-void Operation::OperationModEval(Python3Type &obj, const Python3Type &other) {
-  obj = OperationMod(obj, other);
 }
 
 Python3Type Operation::OperationEqual(Python3Type left, Python3Type right) {
@@ -338,6 +319,22 @@ Python3Type Operation::OperationNot(const Python3Type& obj) {
   else throw OperationException(Python3Typename[static_cast<int>(obj.type_id)], "not");
   return !res;
 }
+Python3Type Operation::OperationNegative(const Python3Type &obj) {
+  if(obj.type_id == Python3TypeId::IdInteger) {
+    auto res = std::any_cast<Integer>(obj);
+    return -res;
+  }
+  else if(obj.type_id == Python3TypeId::IdDecimal) {
+    auto res = std::any_cast<Decimal>(obj);
+    return -res;
+  }
+  else if(obj.type_id == Python3TypeId::IdBoolean) {
+    auto res = std::any_cast<Boolean>(obj);
+    return !res;
+  }
+  else throw OperationException(Python3Typename[static_cast<int>(obj.type_id)], "not");
+}
+
 
 Python3Type Operation::OperationInteger(const Python3Type &obj) {
   return arith_type_cast()(obj, Python3TypeId::IdInteger);
@@ -407,6 +404,10 @@ int Operation::OperationBackward(const Python3Type &obj, int steps) {
   else throw OperationException(Python3Typename[static_cast<int>(obj.type_id)], "goto backward");
   return (res ? steps : 0);
 }
+void Operation::OperationDefineVariable(const std::string &name, CodeSuite *current_suite) {
+  current_suite->DefineVariable(name, Python3Type());
+}
+
 
 
 std::string Function::name() const {
@@ -465,5 +466,8 @@ void CodeSuite::AppendOperation(const Operation &operation) {
 }
 const std::vector<Operation> &CodeSuite::operations() {
   return operations_;
+}
+void CodeSuite::EraseExistingOperations() {
+  operations_.clear();
 }
 
