@@ -4,11 +4,16 @@
 
 
 #include "Python3ParserBaseVisitor.h"
-#include "CodeInterpreter.h"
+#include "BasicOperation.h"
+#include "InterpreterStructure.h"
 
 class EvalVisitor : public Python3ParserBaseVisitor {
   // TODO: override all methods of Python3ParserBaseVisitor
-  CodeInterpreter Interpreter;
+  std::map<std::string, std::size_t> function_map;
+  std::vector<std::pair<FunctionSuite, Python3Parser::SuiteContext *>> function_list;
+  PythonProject project;
+  bool break_sign = false, continue_sign = false, return_sign = false;
+
   virtual std::any visitFile_input(Python3Parser::File_inputContext *ctx) override;
   virtual std::any visitFuncdef(Python3Parser::FuncdefContext *ctx) override;
   virtual std::any visitParameters(Python3Parser::ParametersContext *ctx) override;
