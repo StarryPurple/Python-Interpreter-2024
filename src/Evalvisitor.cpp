@@ -27,6 +27,7 @@ std::any EvalVisitor::visitFuncdef(Python3Parser::FuncdefContext *ctx) {
     std::vector<std::pair<std::string, std::any>>
     >(visit(ctx->parameters()));
   FunctionSuite function(param_list);
+  function.func_name = function_name;
   function_map.insert({function_name, function_map.size()});
   function_list.push_back({function, ctx->suite()});
   return Tuple();
@@ -220,13 +221,18 @@ std::any EvalVisitor::visitContinue_stmt(Python3Parser::Continue_stmtContext *ct
 }
 std::any EvalVisitor::visitReturn_stmt(Python3Parser::Return_stmtContext *ctx) {
   // return type: Interpreter::Tuple (the value of result)
-  project.CallReturn();
   auto testlist_ctx = ctx->testlist();
   if(testlist_ctx) {
     auto res = std::any_cast<Tuple>(visit(testlist_ctx));
+    project.CallReturn();
+    project.AddResult(res);
     return res;
   }
-  else return Tuple(); // empty for nothing to return
+  else {
+    project.CallReturn();
+    project.AddResult(Tuple());
+    return Tuple(); // empty for nothing to return
+  }
 }
 std::any EvalVisitor::visitCompound_stmt(Python3Parser::Compound_stmtContext *ctx) {
   // return type: Interpreter::Tuple
@@ -272,16 +278,16 @@ std::any EvalVisitor::visitSuite(Python3Parser::SuiteContext *ctx) {
   if(auto simple_ctx = ctx->simple_stmt(); simple_ctx) {
     res = std::any_cast<Tuple>(visit(simple_ctx));
     if(project.IsReturn()) {
-      project.EndReturn(); // redundant
-      project.ExitFunction();
+      res = project.GiveResult();
+      // project.EndReturn(); // redundant
       return res;
     }
   }
   for(auto stmt_ctx: ctx->stmt()) {
     res = std::any_cast<Tuple>(visit(stmt_ctx));
     if(project.IsReturn()) {
-      project.EndReturn(); // redundant
-      project.ExitFunction();
+      res = project.GiveResult();
+      // project.EndReturn(); // redundant
       return res;
     }
     // assert(to_Boolean(res == ConstNone));
@@ -290,7 +296,7 @@ std::any EvalVisitor::visitSuite(Python3Parser::SuiteContext *ctx) {
 }
 std::any EvalVisitor::visitTest(Python3Parser::TestContext *ctx) {
   // return type: Value (the value of the test expression)
-  if(project.IsBreak() || project.IsContinue())
+  if(project.IsBreak() || project.IsContinue() || project.IsReturn())
     return Tuple();
   auto res = visit(ctx->or_test());
   return res;
@@ -481,7 +487,9 @@ std::any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
       throw std::runtime_error("No variable name in \"bool()\"");
     return to_Boolean(val);
   }
+
   // other functions.
+  std::cerr << "calling " << func_name << std::endl;
   if(function_map.count(func_name) == 0)
     throw std::runtime_error("Call of undefined function \"" + func_name + "\"");
   std::size_t func_ord = function_map[func_name];
@@ -506,9 +514,12 @@ std::any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
     if(std::any_cast<bool>(init_val == ConstNone)) // A leak of namespace Interpreter?
       throw std::runtime_error("Unassigned argument in function call");
   project.CallFunction(function);
-  auto res = std::any_cast<Tuple>(visit(suite_ctx)); // should be an Interpreter::Tuple in std::any
+  visit(suite_ctx); // should be an Interpreter::Tuple in std::any
+  auto res = std::any_cast<Tuple>(project.GiveResult());
+  project.ExitFunction();
+  // std::cerr << to_String(res[0]) << std::endl;
   auto ans = (res.size() == 1 ? res[0] : res);
-  std::cerr << func_name << " call completed" << std::endl;
+  // std::cerr << func_name << " call completed" << std::endl;
   return ans;
 }
 std::any EvalVisitor::visitTrailer(Python3Parser::TrailerContext *ctx) {

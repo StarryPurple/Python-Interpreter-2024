@@ -15,9 +15,9 @@ using Boolean = bool;
 using String = std::string;
 struct None{};
 
-const auto ConstNone = None();
-
 using Tuple = std::vector<std::any>;
+
+const auto ConstNone = Tuple(); // Attention!
 
 enum class VType {
   tInteger, tDecimal, tBoolean, tString, tNone,

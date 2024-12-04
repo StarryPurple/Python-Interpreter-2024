@@ -34,9 +34,11 @@ PythonProject::PythonProject() {
 
 void PythonProject::CallFunction(const FunctionSuite &function) {
   function_stack.push_back(function);
+  std::cerr << function.func_name << " called" << std::endl;
 }
 
 void PythonProject::ExitFunction() {
+  std::cerr << function_stack.back().func_name << " exited" << std::endl;
   function_stack.pop_back();
 }
 
@@ -73,6 +75,14 @@ void PythonProject::CallReturn() {
 
 void PythonProject::EndReturn() {
   function_stack.back().return_sign = false;
+}
+
+void PythonProject::AddResult(const std::any &obj) {
+  function_stack.back().result = obj;
+}
+
+std::any PythonProject::GiveResult() {
+  return function_stack.back().result;
 }
 
 

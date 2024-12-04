@@ -15,6 +15,8 @@ public:
   using Initialize_List = std::vector<Initialize_Pair>;
   static const std::string UnassignedName;
   bool break_sign = false, continue_sign = false, return_sign = false;
+  std::string func_name;
+  std::any result = Interpreter::ConstNone;
 
 
   // variables listed in the order that parameters are given
@@ -39,6 +41,8 @@ public:
   void EndContinue();
   void CallReturn();
   void EndReturn();
+  void AddResult(const std::any&);
+  std::any GiveResult();
   bool IsBreak() const;
   bool IsContinue() const;
   bool IsReturn() const;
