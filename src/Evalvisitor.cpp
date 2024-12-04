@@ -101,7 +101,11 @@ std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
     std::string opr = std::any_cast<std::string>(visit(ctx->augassign()));
     auto value_list = std::any_cast<Tuple>(visit(ctx->testlist(1)));
     // value list may contain 1-sized tuples (as function results)
-    // wo we must unzip it
+    // wo we must unzip it、
+    while(value_list.size() == 1 && std::any_cast<Tuple>(&value_list[0]) != nullptr) {
+      value_list = std::any_cast<Tuple>(value_list[0]);
+    }
+    /*
     for(std::any &val: value_list)
       if(std::any_cast<Tuple>(&val) != nullptr) {
         Tuple tmp = std::any_cast<Tuple>(val);
@@ -109,7 +113,7 @@ std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
           throw std::runtime_error("Augmented assignment with zero / multiple parameters");
         type_trait(tmp[0]);
         val = tmp[0];
-      }
+      }*/
     std::vector<std::string> var_name_list = testlist_splitter(ctx->testlist(0)->getText());
     if(var_name_list.size() != value_list.size())
       throw std::runtime_error("Assignment with different parameter numbers");
@@ -176,6 +180,9 @@ std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
   // else a multiple assignment
   std::size_t len = ctx->testlist().size();
   auto value_list = std::any_cast<Tuple>(visit(ctx->testlist(len - 1)));
+  while(value_list.size() == 1 && std::any_cast<Tuple>(&value_list[0]) != nullptr) {
+    value_list = std::any_cast<Tuple>(value_list[0]);
+  }
   for(std::size_t i = len - 1; i >= 1; i--) {
     // (unsigned long)i < 0 can't happen...
     std::vector<std::string> var_name_list = testlist_splitter(ctx->testlist(i - 1)->getText());
@@ -595,14 +602,22 @@ std::any EvalVisitor::visitFormat_string(Python3Parser::Format_stringContext *ct
     for(std::size_t j = 0; j < test_list.size(); j++) {
       str = str + to_String(test_list[j]);
       if(j != test_list.size() - 1)
-        str += ", ";
+        str += " ";
     }
     if(string_type)
       res = res + ctx->FORMAT_STRING_LITERAL(i)->getText() + str;
     else res = res + str + ctx->FORMAT_STRING_LITERAL(i)->getText();
   }
-  if(fmted_cnt > raw_cnt)
-    res += to_String(visit(ctx->testlist(fmted_cnt - 1)));
+  if(fmted_cnt > raw_cnt) {
+    auto test_list = std::any_cast<Tuple>(visit(ctx->testlist(fmted_cnt - 1)));
+      std::string str = "";
+      for(std::size_t i = 0; i < test_list.size(); i++) {
+        str = str + to_String(test_list[i]);
+        if(i != test_list.size() - 1)
+          str += " ";
+      }
+    res += str;
+  }
   else if(raw_cnt > fmted_cnt)
     res += ctx->FORMAT_STRING_LITERAL(raw_cnt - 1)->getText();
   return res;
