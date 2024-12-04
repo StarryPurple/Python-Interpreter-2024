@@ -13,7 +13,7 @@ include_directories(
 add_subdirectory(${PROJECT_SOURCE_DIR}/generated)
 ### YOU CAN"T MODIFY THE CODE ABOVE
 
-#set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
+# set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
 file(GLOB_RECURSE main_src src/*.cpp)
 
 add_executable(code ${main_src}) # Add all *.cpp file after src/main.cpp, like src/Evalvisitor.cpp did
