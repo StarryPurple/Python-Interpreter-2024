@@ -49,12 +49,12 @@ std::any &PythonProject::Variable(const std::string &var_name) {
       return function_stack[pos].LocalVariable(var_name);
     pos--;
   }*/ // wrong grammer
-  // local
-  if(function_stack.back().variable_map.count(var_name) > 0)
-    return function_stack.back().LocalVariable(var_name);
   // global
   if(function_stack.front().variable_map.count(var_name) > 0)
     return function_stack.front().LocalVariable(var_name);
+  // local
+  if(function_stack.back().variable_map.count(var_name) > 0)
+    return function_stack.back().LocalVariable(var_name);
   // new definition
   function_stack.back().DefineVariable(var_name, Interpreter::ConstNone);
   return function_stack.back().variable_space[function_stack.back().variable_map[var_name]];
