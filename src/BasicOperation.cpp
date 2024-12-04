@@ -48,6 +48,13 @@ Decimal to_Decimal(const std::any &obj) {
 }
 
 Boolean to_Boolean(const std::any &obj) {
+  // Tuple special judge
+  if(std::any_cast<Tuple>(&obj) != nullptr) {
+    Tuple tmp = std::any_cast<Tuple>(obj);
+    if(tmp.size() != 1)
+      throw std::runtime_error("Don't converse Tuples to Boolean.");
+    return to_Boolean(tmp[0]);
+  }
   VType type = type_trait(obj);
   switch(type) {
     case VType::tInteger: return !(std::any_cast<Integer>(obj).is_zero());
@@ -277,6 +284,16 @@ std::vector<std::string> testlist_splitter(const std::string &testlist_str) {
     res.push_back(name);
   return res;
 }
+
+void convert_single(std::any &obj) {
+  if(std::any_cast<Tuple>(&obj) != nullptr) {
+    Tuple tmp = std::any_cast<Tuple>(obj);
+    if(tmp.size() != 1)
+      throw std::runtime_error("Failure in Tuple -> Value conversion");
+    obj = tmp[0];
+  }
+}
+
 
 
 }

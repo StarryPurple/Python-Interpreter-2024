@@ -50,3 +50,41 @@ std::any &PythonProject::Variable(const std::string &var_name) {
   function_stack.back().DefineVariable(var_name, Interpreter::ConstNone);
   return function_stack.back().variable_space[function_stack.back().variable_map[var_name]];
 }
+
+void PythonProject::CallBreak() {
+  function_stack.back().break_sign = true;
+}
+
+void PythonProject::EndBreak() {
+  function_stack.back().break_sign = false;
+}
+
+void PythonProject::CallContinue() {
+  function_stack.back().continue_sign = true;
+}
+
+void PythonProject::EndContinue() {
+  function_stack.back().continue_sign = false;
+}
+
+void PythonProject::CallReturn() {
+  function_stack.back().return_sign = true;
+}
+
+void PythonProject::EndReturn() {
+  function_stack.back().return_sign = false;
+}
+
+
+bool PythonProject::IsBreak() const {
+  return function_stack.back().break_sign;
+}
+
+
+bool PythonProject::IsContinue() const {
+  return function_stack.back().continue_sign;
+}
+
+bool PythonProject::IsReturn() const {
+  return function_stack.back().return_sign;
+}

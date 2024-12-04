@@ -11,7 +11,6 @@ def quick_power(x , y , p) :
 	return ret
 
 def miller_rabin(x , n) :
-    #print("Testing miller rabin", x, n)
 	cnt = 0
 	m = n - 1
 	while m % 2 == 0 :
@@ -58,7 +57,7 @@ def iabs(x) :
 	else : return -x
 
 def pollard_rho(n) :
-	print("try" , n)
+	#print ("try" , n)
 	if n == 1 : return
 	if is_prime(n) :
 		print(n)
@@ -74,7 +73,6 @@ def pollard_rho(n) :
 				return
 			p , q = F(p , n , c) , F(F(q , n , c) , n , c)
 
-print("Test")
 pollard_rho(998244352)
 print()
 pollard_rho(809172)

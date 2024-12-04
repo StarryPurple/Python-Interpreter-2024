@@ -14,6 +14,8 @@ public:
   using Initialize_Pair = std::pair<std::string, std::any>; // name & initial value
   using Initialize_List = std::vector<Initialize_Pair>;
   static const std::string UnassignedName;
+  bool break_sign = false, continue_sign = false, return_sign = false;
+
 
   // variables listed in the order that parameters are given
   std::map<std::string, int> variable_map;
@@ -31,6 +33,15 @@ class PythonProject {
   std::vector<FunctionSuite> function_stack;
 public:
   PythonProject();
+  void CallBreak();
+  void EndBreak();
+  void CallContinue();
+  void EndContinue();
+  void CallReturn();
+  void EndReturn();
+  bool IsBreak() const;
+  bool IsContinue() const;
+  bool IsReturn() const;
   void CallFunction(const FunctionSuite &);
   void ExitFunction();
   std::any &Variable(const std::string &);
