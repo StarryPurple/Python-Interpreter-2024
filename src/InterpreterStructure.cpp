@@ -34,21 +34,28 @@ PythonProject::PythonProject() {
 
 void PythonProject::CallFunction(const FunctionSuite &function) {
   function_stack.push_back(function);
-  std::cerr << function.func_name << " called" << std::endl;
+  // std::cerr << function.func_name << " called" << std::endl;
 }
 
 void PythonProject::ExitFunction() {
-  std::cerr << function_stack.back().func_name << " exited" << std::endl;
+  // std::cerr << function_stack.back().func_name << " exited" << std::endl;
   function_stack.pop_back();
 }
 
 std::any &PythonProject::Variable(const std::string &var_name) {
-  int pos = function_stack.size() - 1;
+  /*int pos = function_stack.size() - 1;
   while(pos >= 0) {
     if(function_stack[pos].variable_map.count(var_name) > 0)
       return function_stack[pos].LocalVariable(var_name);
     pos--;
-  }
+  }*/ // wrong grammer
+  // local
+  if(function_stack.back().variable_map.count(var_name) > 0)
+    return function_stack.back().LocalVariable(var_name);
+  // global
+  if(function_stack.front().variable_map.count(var_name) > 0)
+    return function_stack.front().LocalVariable(var_name);
+  // new definition
   function_stack.back().DefineVariable(var_name, Interpreter::ConstNone);
   return function_stack.back().variable_space[function_stack.back().variable_map[var_name]];
 }

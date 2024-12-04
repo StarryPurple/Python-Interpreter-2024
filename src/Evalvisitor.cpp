@@ -489,7 +489,7 @@ std::any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
   }
 
   // other functions.
-  std::cerr << "calling " << func_name << std::endl;
+  // std::cerr << "calling " << func_name << std::endl;
   if(function_map.count(func_name) == 0)
     throw std::runtime_error("Call of undefined function \"" + func_name + "\"");
   std::size_t func_ord = function_map[func_name];

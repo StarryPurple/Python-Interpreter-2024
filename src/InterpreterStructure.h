@@ -16,7 +16,7 @@ public:
   static const std::string UnassignedName;
   bool break_sign = false, continue_sign = false, return_sign = false;
   std::string func_name;
-  std::any result = Interpreter::ConstNone;
+  std::any result = Interpreter::Tuple();
 
 
   // variables listed in the order that parameters are given

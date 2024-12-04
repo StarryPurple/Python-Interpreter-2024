@@ -17,7 +17,7 @@ struct None{};
 
 using Tuple = std::vector<std::any>;
 
-const auto ConstNone = Tuple(); // Attention!
+const auto ConstNone = None();
 
 enum class VType {
   tInteger, tDecimal, tBoolean, tString, tNone,
