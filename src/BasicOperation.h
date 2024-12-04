@@ -79,10 +79,6 @@ void print(const Tuple &);
 // e.g.   "  1a e,  sa\n ,  e@eq " -> {"1ae", "sa\n", "e@eq"}
 std::vector<std::string> testlist_splitter(const std::string &);
 
-// Sometimes we need to turn a 1-size Tuple to Value.
-
-void convert_single(std::any &);
-
 }
 
 #endif // BASIC_OPERATION_H

@@ -361,7 +361,7 @@ std::any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
   for(std::size_t i = 1; i < ctx->arith_expr().size(); i++) {
     auto opr = std::any_cast<std::string>(visit(ctx->comp_op(i - 1)));
     auto tmp = visit(ctx->arith_expr(i));
-    assert(std::any_cast<std::any>(&res) == nullptr);
+    // assert(std::any_cast<std::any>(&res) == nullptr);
     if(opr == ">") res = (res > tmp);
     else if(opr == "<") res = (res < tmp);
     else if(opr == "==")
@@ -425,12 +425,12 @@ std::any EvalVisitor::visitFactor(Python3Parser::FactorContext *ctx) {
   if(auto fct = ctx->factor(); fct != nullptr) {
     if(ctx->ADD()) {
       auto res = +visit(fct);
-      convert_single(res);
+      // convert_single(res);
       return res;
     }
     else if(ctx->MINUS()) {
       auto res = -visit(fct);
-      convert_single(res);
+      // convert_single(res);
       return res;
     }
   }
@@ -564,7 +564,7 @@ std::any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
   } else if(!ctx->STRING().empty()) {
     std::string res = "";
     for(auto str_ptr: ctx->STRING()) {
-      assert(str_ptr);
+      // assert(str_ptr);
       std::string append = str_ptr->getText();
       res += append.substr(1, append.length() - 2); // exclude the starting and ending "" or ''
     }
@@ -577,12 +577,12 @@ std::any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
     return false;
   else if(auto test_ctx = ctx->test(); test_ctx) {
     auto res = visit(test_ctx);
-    assert(std::any_cast<std::any>(&res) == nullptr);
+    // assert(std::any_cast<std::any>(&res) == nullptr);
     return res;
   }
   else if(auto fstring_ctx = ctx->format_string(); fstring_ctx) {
     auto res = visit(fstring_ctx);
-    assert(std::any_cast<std::any>(&res) == nullptr);
+    // assert(std::any_cast<std::any>(&res) == nullptr);
     return res;
   }
 }

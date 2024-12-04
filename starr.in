@@ -1,6 +1,2 @@
-def swap(a, b):
-    return b, a
-a = 1222.0
-b = True
-c, d = a, b = swap(a, b)
-print(a, b, c, d)
+a = ""
+print(a == False)

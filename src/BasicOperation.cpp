@@ -213,6 +213,10 @@ std::any operator==(const std::any &objL, const std::any &objR) {
     return false;
   else if(typeL == VType::tString && typeR == VType::tString)
     return std::any_cast<String>(objL) == std::any_cast<String>(objR);
+  else if(typeL == VType::tString && std::any_cast<String>(objL) == "")
+    return to_Boolean(objR) == false;
+  else if(typeR == VType::tString && std::any_cast<String>(objR) == "")
+    return to_Boolean(objL) == false;
   else if(typeL == VType::tString || typeR == VType::tString)
     return false;
   else if(typeL == VType::tDecimal || typeR == VType::tDecimal)
@@ -284,16 +288,5 @@ std::vector<std::string> testlist_splitter(const std::string &testlist_str) {
     res.push_back(name);
   return res;
 }
-
-void convert_single(std::any &obj) {
-  if(std::any_cast<Tuple>(&obj) != nullptr) {
-    Tuple tmp = std::any_cast<Tuple>(obj);
-    if(tmp.size() != 1)
-      throw std::runtime_error("Failure in Tuple -> Value conversion");
-    obj = tmp[0];
-  }
-}
-
-
 
 }
