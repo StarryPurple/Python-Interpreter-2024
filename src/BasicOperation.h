@@ -13,9 +13,9 @@ using Integer = sjtu::int2048;
 using Decimal = double;
 using Boolean = bool;
 using String = std::string;
-using None = std::nullptr_t;
+struct None{};
 
-const auto ConstNone = std::any(nullptr);
+const auto ConstNone = None();
 
 using Tuple = std::vector<std::any>;
 
@@ -24,6 +24,8 @@ enum class VType {
 };
 
 VType type_trait(const std::any &);
+
+void unzip(std::any &);
 
 // builtin type-cast function.
 

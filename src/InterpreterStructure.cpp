@@ -13,19 +13,24 @@ FunctionSuite::FunctionSuite(const Initialize_List &param_list) {
 
 
 void FunctionSuite::DefineVariable(const std::string &var_name, const std::any &init_val) {
-  if(variable_map.count(var_name) > 0)
+  if(variable_map.find(var_name) != variable_map.end())
     throw std::runtime_error("Re-definition of variable \"" + var_name + "\"");
   variable_map.insert({var_name, variable_map.size()});
   variable_space.push_back(init_val);
 }
 
 std::any &FunctionSuite::LocalVariable(const std::string &var_name) {
-  if(variable_map.count(var_name) == 0)
+  if(variable_map.find(var_name) == variable_map.end())
     DefineVariable(var_name, Interpreter::ConstNone);
   return variable_space[variable_map[var_name]];
 }
 
 // class PythonProject
+
+PythonProject::PythonProject() {
+  function_stack.push_back(FunctionSuite()); // the placeholder for __main__
+}
+
 
 void PythonProject::CallFunction(const FunctionSuite &function) {
   function_stack.push_back(function);

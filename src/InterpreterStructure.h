@@ -16,10 +16,10 @@ public:
   static const std::string UnassignedName;
 
   // variables listed in the order that parameters are given
-  std::map<std::string, int> variable_map{};
-  Variable_Space variable_space{};
+  std::map<std::string, int> variable_map;
+  Variable_Space variable_space;
 
-  FunctionSuite() = delete;
+  FunctionSuite() = default;
   FunctionSuite(const FunctionSuite &) = default;
   FunctionSuite(const Initialize_List &);
   void DefineVariable(const std::string &, const std::any &);
@@ -30,7 +30,7 @@ public:
 class PythonProject {
   std::vector<FunctionSuite> function_stack;
 public:
-  PythonProject() = default;
+  PythonProject();
   void CallFunction(const FunctionSuite &);
   void ExitFunction();
   std::any &Variable(const std::string &);

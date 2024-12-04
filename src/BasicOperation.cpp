@@ -16,6 +16,15 @@ VType type_trait(const std::any &obj) {
   else throw std::runtime_error("Type trait fails.");
 }
 
+void unzip(std::any &obj) {
+  // First unzip redundant package
+  // Of course I hope I managed everything well so that there's no need to do this.
+  // But I can't!
+  while(std::any_cast<std::any>(&obj)) {
+    obj = std::any_cast<std::any>(obj);
+  }
+}
+
 Integer to_Integer(const std::any &obj) {
   VType type = type_trait(obj);
   switch(type) {
@@ -238,7 +247,8 @@ std::any operator>=(const std::any &objL, const std::any &objR) {
 }
 
 void print(const std::any &obj) {
-  std::cout << to_String(obj);
+  std::string res = to_String(obj);
+  std::cout << res;
 }
 
 void print(const Tuple &tuple) {

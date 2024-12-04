@@ -754,8 +754,8 @@ int2048::operator std::string() {
       }
       else res += std::to_string(integer);
     } else throw std::runtime_error("Why you changed you base? Modify it.");
-    return res;
   }
+  return res;
 }
 
 

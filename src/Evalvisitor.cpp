@@ -13,8 +13,8 @@ std::any EvalVisitor::visitFile_input(Python3Parser::File_inputContext *ctx) {
   return "Interpretation ended successfully. Thank you for using Python Interpreter. Bye!\n";
 }
 std::any EvalVisitor::visitFuncdef(Python3Parser::FuncdefContext *ctx) {
-  // return ConstNone.
-  std::string function_name = ctx->NAME()->toString();
+  // return empty tuple.
+  std::string function_name = ctx->NAME()->getText();
   if(function_name == "print" || function_name == "int" || function_name == "float"
     || function_name == "str" || function_name == "bool" || function_name == "None"
     || function_name ==  "True" || function_name == "False" || function_name == "def"
@@ -29,13 +29,14 @@ std::any EvalVisitor::visitFuncdef(Python3Parser::FuncdefContext *ctx) {
   FunctionSuite function(param_list);
   function_map.insert({function_name, function_map.size()});
   function_list.push_back({function, ctx->suite()});
-  return ConstNone;
+  return Tuple();
 }
 std::any EvalVisitor::visitParameters(Python3Parser::ParametersContext *ctx) {
   // return type: std::vector<std::pair<std::string, std::any>>
-  if(auto args_list = ctx->typedargslist(); args_list)
-    return std::vector<std::pair<std::string, std::any>>();
-  else return visit(args_list);
+  auto args_list = ctx->typedargslist();
+  if(args_list)
+    return visit(args_list);
+  else return std::vector<std::pair<std::string, std::any>>();
 }
 std::any EvalVisitor::visitTypedargslist(Python3Parser::TypedargslistContext *ctx) {
   // return type: std::vector<std::pair<std::string, std::any>>
@@ -57,7 +58,7 @@ std::any EvalVisitor::visitTypedargslist(Python3Parser::TypedargslistContext *ct
 }
 std::any EvalVisitor::visitTfpdef(Python3Parser::TfpdefContext *ctx) {
   // return type: std::string
-  std::string param_name = ctx->NAME()->toString();
+  std::string param_name = ctx->NAME()->getText();
   if(param_name == "print" || param_name == "int" || param_name == "float"
     || param_name == "str" || param_name == "bool" || param_name == "None"
     || param_name ==  "True" || param_name == "False" || param_name == "def"
@@ -69,36 +70,36 @@ std::any EvalVisitor::visitTfpdef(Python3Parser::TfpdefContext *ctx) {
   return param_name;
 }
 std::any EvalVisitor::visitStmt(Python3Parser::StmtContext *ctx) {
-  // return type: Interpreter::Tuple / ConstNone (for no return statement)
+  // return type: Interpreter::Tuple
   if(break_sign || return_sign || continue_sign)
-    return ConstNone;
+    return Tuple();
   auto simple_ctx = ctx->simple_stmt();
   auto compound_ctx = ctx->compound_stmt();
   if(simple_ctx)
-    return visit(simple_ctx);
-  else return visit(compound_ctx);
+    return std::any_cast<Tuple>(visit(simple_ctx));
+  else return std::any_cast<Tuple>(visit(compound_ctx));
 }
 std::any EvalVisitor::visitSimple_stmt(Python3Parser::Simple_stmtContext *ctx) {
   if(break_sign || return_sign || continue_sign)
-    return ConstNone;
-  // return type: Interpreter::Tuple / ConstNone (for no return statement)
-  return visit(ctx->small_stmt());
+    return Tuple();
+  // return type: Interpreter::Tuple
+  return std::any_cast<Tuple>(visit(ctx->small_stmt()));
 }
 std::any EvalVisitor::visitSmall_stmt(Python3Parser::Small_stmtContext *ctx) {
-  // return type: Interpreter::Tuple / ConstNone (for no return statement)
+  // return type: Interpreter::Tuple
   auto expr_ctx = ctx->expr_stmt();
   auto flow_ctx = ctx->flow_stmt();
   if(expr_ctx)
-    return visit(expr_ctx);
-  else return visit(flow_ctx);
+    return std::any_cast<Tuple>(visit(expr_ctx));
+  else return std::any_cast<Tuple>(visit(flow_ctx));
 }
 std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
-  // return type: ConstNone (for no return statement)
+  // return type: empty Tuple
   if(ctx->augassign()) {
-    // a augmented assignment
+    // an augmented assignment
     std::string opr = std::any_cast<std::string>(visit(ctx->augassign()));
     auto value_list = std::any_cast<Tuple>(visit(ctx->testlist(1)));
-    std::vector<std::string> var_name_list = testlist_splitter(ctx->testlist(0)->toString());
+    std::vector<std::string> var_name_list = testlist_splitter(ctx->testlist(0)->getText());
     if(var_name_list.size() != value_list.size())
       throw std::runtime_error("Assignment with different parameter numbers");
     // augmented assignment is illegal for tuples?
@@ -123,82 +124,84 @@ std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
       for(std::size_t i = 0; i < var_name_list.size(); i++)
         project.Variable(var_name_list[i]) %= value_list[i];
     }
-    return ConstNone;
+    return Tuple();
   }
   // else a multiple assignment
   std::size_t len = ctx->testlist().size();
   auto value_list = std::any_cast<Tuple>(visit(ctx->testlist(len - 1)));
   for(std::size_t i = len - 1; i >= 1; i--) {
     // (unsigned long)i < 0 can't happen...
-    std::vector<std::string> var_name_list = testlist_splitter(ctx->testlist(i - 1)->toString());
+    std::vector<std::string> var_name_list = testlist_splitter(ctx->testlist(i - 1)->getText());
     if(var_name_list.size() != value_list.size())
       throw std::runtime_error("Assignment with different parameter numbers");
     for(std::size_t j = 0; j < var_name_list.size(); j++)
       project.Variable(var_name_list[j]) = value_list[j];
   }
-  return ConstNone;
+  return Tuple();
 }
 std::any EvalVisitor::visitAugassign(Python3Parser::AugassignContext *ctx) {
   // return type: std::string (what the operator is)
-  if(ctx->ADD_ASSIGN()) return ctx->ADD_ASSIGN()->toString();
-  else if(ctx->SUB_ASSIGN()) return ctx->SUB_ASSIGN()->toString();
-  else if(ctx->MULT_ASSIGN()) return ctx->MULT_ASSIGN()->toString();
-  else if(ctx->DIV_ASSIGN()) return ctx->DIV_ASSIGN()->toString();
-  else if(ctx->IDIV_ASSIGN()) return ctx->IDIV_ASSIGN()->toString();
-  else if(ctx->MOD_ASSIGN()) return ctx->MOD_ASSIGN()->toString();
+  if(ctx->ADD_ASSIGN()) return std::make_any<std::string>("+=");
+  else if(ctx->SUB_ASSIGN()) return std::make_any<std::string>("-=");
+  else if(ctx->MULT_ASSIGN()) return std::make_any<std::string>("*=");
+  else if(ctx->DIV_ASSIGN()) return std::make_any<std::string>("/=");
+  else if(ctx->IDIV_ASSIGN()) return std::make_any<std::string>("//=");
+  else if(ctx->MOD_ASSIGN()) return std::make_any<std::string>("%=");
 }
 std::any EvalVisitor::visitFlow_stmt(Python3Parser::Flow_stmtContext *ctx) {
-  // return type: Interpreter::Tuple / ConstNone (for no return statement)
+  // return type: Interpreter::Tuple
   if(auto break_ctx = ctx->break_stmt(); break_ctx)
-    return visit(break_ctx);
+    return std::any_cast<Tuple>(visit(break_ctx));
   else if(auto continue_ctx = ctx->continue_stmt(); continue_ctx)
-    return visit(continue_ctx);
+    return std::any_cast<Tuple>(visit(continue_ctx));
   else if(auto return_ctx = ctx->return_stmt(); return_ctx)
-    return visit(return_ctx);
+    return std::any_cast<Tuple>(visit(return_ctx));
 }
 std::any EvalVisitor::visitBreak_stmt(Python3Parser::Break_stmtContext *ctx) {
-  // return ConstNone
+  // return empty Tuple
   break_sign = true;
-  return ConstNone;
+  return Tuple();
 }
 std::any EvalVisitor::visitContinue_stmt(Python3Parser::Continue_stmtContext *ctx) {
-  // return ConstNone
+  // return empty Tuple
   continue_sign = true;
-  return ConstNone;
+  return Tuple();
 }
 std::any EvalVisitor::visitReturn_stmt(Python3Parser::Return_stmtContext *ctx) {
   // return type: Interpreter::Tuple (the value of result)
   return_sign = true;
-  return visit(ctx->testlist());
+  auto testlist_ctx = ctx->testlist();
+  if(testlist_ctx)
+    return std::any_cast<Tuple>(visit(testlist_ctx));
+  else return Tuple(); // empty for nothing to return
 }
 std::any EvalVisitor::visitCompound_stmt(Python3Parser::Compound_stmtContext *ctx) {
-  // return type: Interpreter::Tuple / ConstNone (for no return statement)
+  // return type: Interpreter::Tuple
   if(auto if_ctx = ctx->if_stmt(); if_ctx)
-    return visit(if_ctx);
+    return std::any_cast<Tuple>(visit(if_ctx));
   else if(auto while_ctx = ctx->while_stmt(); while_ctx)
-    return visit(while_ctx);
+    return std::any_cast<Tuple>(visit(while_ctx));
   else if(auto funcdef_ctx = ctx->funcdef(); funcdef_ctx)
-    return visit(funcdef_ctx);
+    return std::any_cast<Tuple>(visit(funcdef_ctx));
 }
 std::any EvalVisitor::visitIf_stmt(Python3Parser::If_stmtContext *ctx) {
-  // return type: Interpreter::Tuple / ConstNone (for no return statement)
+  // return type: Interpreter::Tuple
   std::size_t branch_cnt = ctx->test().size();
   for(int i = 0; i < branch_cnt; i++)
     if(to_Boolean(visit(ctx->test(i)))) {
-      return visit(ctx->suite(i));
+      return std::any_cast<Tuple>(visit(ctx->suite(i)));
     }
   if(ctx->ELSE())
-    return visit(ctx->suite(branch_cnt));
-  return ConstNone;
+    return std::any_cast<Tuple>(visit(ctx->suite(branch_cnt)));
+  return Tuple();
 }
 std::any EvalVisitor::visitWhile_stmt(Python3Parser::While_stmtContext *ctx) {
-  std::any res = ConstNone;
+  std::any res = Tuple();
   while(to_Boolean(visit(ctx->test()))) {
-    res = visit(ctx->suite());
+    res = std::any_cast<Tuple>(visit(ctx->suite()));
     if(return_sign) {
       return res;
     }
-    assert(to_Boolean(res == ConstNone));
     if(break_sign) {
       break_sign = false;
       break;
@@ -212,36 +215,41 @@ std::any EvalVisitor::visitWhile_stmt(Python3Parser::While_stmtContext *ctx) {
 std::any EvalVisitor::visitSuite(Python3Parser::SuiteContext *ctx) {
   // return type: Interpreter::Tuple (if there's a return line inside the suite.)
   // if no return line / return nothing, returns an empty Tuple.
-  std::any res = ConstNone;
+  std::any res = Tuple();
   if(auto simple_ctx = ctx->simple_stmt(); simple_ctx) {
-    res = visit(simple_ctx);
-    assert(break_sign);
-    assert(continue_sign);
+    res = std::any_cast<Tuple>(visit(simple_ctx));
+    assert(!break_sign);
+    assert(!continue_sign);
     if(return_sign) {
       return_sign = false;
+      // unzip(res);
       return res;
     }
-    assert(to_Boolean(res == ConstNone));
+    // assert(to_Boolean(res == ConstNone));
   }
   for(auto stmt_ctx: ctx->stmt()) {
-    res = visit(stmt_ctx);
-    assert(break_sign);
-    assert(continue_sign);
+    res = std::any_cast<Tuple>(visit(stmt_ctx));
+    assert(!break_sign);
+    assert(!continue_sign);
     if(return_sign) {
       return_sign = false;
+      // unzip(res);
       return res;
     }
-    assert(to_Boolean(res == ConstNone));
+    // assert(to_Boolean(res == ConstNone));
   }
   return res;
 }
 std::any EvalVisitor::visitTest(Python3Parser::TestContext *ctx) {
-  // return type: std::any (the value of the test expression)
-  return visit(ctx->or_test());
+  // return type: Value (the value of the test expression)
+  auto res = visit(ctx->or_test());
+  // unzip(res);
+  return res;
 }
 std::any EvalVisitor::visitOr_test(Python3Parser::Or_testContext *ctx) {
   // return type: Value (the value of the test expression)
   std::any res = visit(ctx->and_test(0));
+  // unzip(res);
   for(std::size_t i = 1; i < ctx->and_test().size(); i++) {
     if(to_Boolean(res))
       return res;
@@ -252,6 +260,7 @@ std::any EvalVisitor::visitOr_test(Python3Parser::Or_testContext *ctx) {
 std::any EvalVisitor::visitAnd_test(Python3Parser::And_testContext *ctx) {
   // return type: Value (the value of the test expression)
   std::any res = visit(ctx->not_test(0));
+  // unzip(res);
   for(std::size_t i = 1; i < ctx->not_test().size(); i++) {
     if(!to_Boolean(res))
       return res;
@@ -269,12 +278,17 @@ std::any EvalVisitor::visitNot_test(Python3Parser::Not_testContext *ctx) {
 std::any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
   // return type: Value (the value of the expression)
   auto res = visit(ctx->arith_expr(0));
+  // unzip(res);
+  if(ctx->arith_expr().size() == 1)
+    return res;
   for(std::size_t i = 1; i < ctx->arith_expr().size(); i++) {
     auto opr = std::any_cast<std::string>(visit(ctx->comp_op(i - 1)));
     auto tmp = visit(ctx->arith_expr(i));
+    assert(std::any_cast<std::any>(&res) == nullptr);
     if(opr == ">") res = (res > tmp);
     else if(opr == "<") res = (res < tmp);
-    else if(opr == "==") res = (res == tmp);
+    else if(opr == "==")
+      res = (res == tmp);
     else if(opr == "!=") res = (res != tmp);
     else if(opr == "<=") res = (res <= tmp);
     else if(opr == ">=") res = (res >= tmp);
@@ -283,16 +297,17 @@ std::any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
 }
 std::any EvalVisitor::visitComp_op(Python3Parser::Comp_opContext *ctx) {
   // return type: std::string (what the operator is)
-  if(ctx->LESS_THAN()) return ctx->LESS_THAN()->toString();
-  else if(ctx->GREATER_THAN()) return ctx->GREATER_THAN()->toString();
-  else if(ctx->EQUALS()) return ctx->EQUALS()->toString();
-  else if(ctx->GT_EQ()) return ctx->GT_EQ()->toString();
-  else if(ctx->LT_EQ()) return ctx->LT_EQ()->toString();
-  else if(ctx->NOT_EQ_2()) return ctx->NOT_EQ_2()->toString();
+  if(ctx->LESS_THAN()) return std::make_any<std::string>("<");
+  else if(ctx->GREATER_THAN()) return std::make_any<std::string>(">");
+  else if(ctx->EQUALS()) return std::make_any<std::string>("==");
+  else if(ctx->GT_EQ()) return std::make_any<std::string>(">=");
+  else if(ctx->LT_EQ()) return std::make_any<std::string>("<=");
+  else if(ctx->NOT_EQ_2()) return std::make_any<std::string>("!=");
 }
 std::any EvalVisitor::visitArith_expr(Python3Parser::Arith_exprContext *ctx) {
   // return type: Value (the value of the expression)
   auto res = visit(ctx->term(0));
+  // unzip(res);
   for(std::size_t i = 1; i < ctx->term().size(); i++) {
     auto opr = std::any_cast<std::string>(visit(ctx->addorsub_op(i - 1)));
     auto tmp = visit(ctx->term(i));
@@ -303,12 +318,13 @@ std::any EvalVisitor::visitArith_expr(Python3Parser::Arith_exprContext *ctx) {
 }
 std::any EvalVisitor::visitAddorsub_op(Python3Parser::Addorsub_opContext *ctx) {
   // return type: std::string (what the operator is)
-  if(ctx->ADD()) return ctx->ADD()->toString();
-  else if(ctx->MINUS()) return ctx->MINUS()->toString();
+  if(ctx->ADD()) return std::make_any<std::string>("+");
+  else if(ctx->MINUS()) return std::make_any<std::string>("-");
 }
 std::any EvalVisitor::visitTerm(Python3Parser::TermContext *ctx) {
   // return type: Value (the value of the expression)
   auto res = visit(ctx->factor(0));
+  // unzip(res);
   for(std::size_t i = 1; i < ctx->factor().size(); i++) {
     auto opr = std::any_cast<std::string>(visit(ctx->muldivmod_op(i - 1)));
     auto tmp = visit(ctx->factor(i));
@@ -321,10 +337,10 @@ std::any EvalVisitor::visitTerm(Python3Parser::TermContext *ctx) {
 }
 std::any EvalVisitor::visitMuldivmod_op(Python3Parser::Muldivmod_opContext *ctx) {
   // return type: std::string (what the operator is)
-  if(ctx->STAR()) return "*";
-  else if(ctx->DIV()) return "/";
-  else if(ctx->IDIV()) return "//";
-  else if(ctx->MOD()) return "%";
+  if(ctx->STAR()) return std::make_any<std::string>("*");
+  else if(ctx->DIV()) return std::make_any<std::string>("/");
+  else if(ctx->IDIV()) return std::make_any<std::string>("//");
+  else if(ctx->MOD()) return std::make_any<std::string>("%");
 }
 std::any EvalVisitor::visitFactor(Python3Parser::FactorContext *ctx) {
   // return type: Value (the value of the expression)
@@ -332,18 +348,27 @@ std::any EvalVisitor::visitFactor(Python3Parser::FactorContext *ctx) {
     if(ctx->ADD()) return +visit(fct);
     else if(ctx->MINUS()) return -visit(fct);
   }
-  return visit(ctx->atom_expr());
+  auto res = visit(ctx->atom_expr());
+  return res;
 }
 std::any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
   // return type: Value (the value of the expression)
   // or: Interpreter::Tuple (the result of the function)
   auto atom_ctx = ctx->atom();
   auto trailer_ctx = ctx->trailer();
-  if(trailer_ctx == nullptr)
-    return visit(atom_ctx); // A rvalue
+  if(trailer_ctx == nullptr){
+    auto res = visit(atom_ctx); // A rvalue
+    assert(std::any_cast<std::any>(&res) == nullptr);
+    // unzip(res);
+    return res;
+    }
+
   // else, a function call
-  std::string func_name = atom_ctx->toString(); // It must be a function name.
+  func_call_sign = true;
+  std::string func_name = std::any_cast<std::string>(visit(atom_ctx)); // It must be a function name.
+  func_call_sign = false;
   auto initialize_list = std::any_cast<FunctionSuite::Initialize_List>(visit(trailer_ctx));
+
   // special judge for builtin functions
   if(func_name == "print") {
     Tuple res;
@@ -385,7 +410,7 @@ std::any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
   }
   // other functions.
   if(function_map.count(func_name) == 0)
-    throw std::runtime_error("Call of undefined function.");
+    throw std::runtime_error("Call of undefined function \"" + func_name + "\"");
   std::size_t func_ord = function_map[func_name];
   auto [function, suite_ctx] = function_list[func_ord];
   for(std::size_t i = 0, anon_pos = -1; i < initialize_list.size(); i++) {
@@ -408,8 +433,9 @@ std::any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
     if(std::any_cast<bool>(init_val == ConstNone)) // A leak of namespace Interpreter?
       throw std::runtime_error("Unassigned argument in function call");
   project.CallFunction(function);
-  auto res = visit(suite_ctx); // should be a Interpreter::Tuple in std::any
+  auto res = visit(suite_ctx); // should be an Interpreter::Tuple in std::any
   project.ExitFunction();
+  unzip(res);
   return res;
 }
 std::any EvalVisitor::visitTrailer(Python3Parser::TrailerContext *ctx) {
@@ -421,28 +447,52 @@ std::any EvalVisitor::visitTrailer(Python3Parser::TrailerContext *ctx) {
 std::any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
   // return type: Value (the value of the expression)
   if(auto name_ctx = ctx->NAME(); name_ctx) {
-    std::string var_name = name_ctx->toString();
-    return project.Variable(var_name);
+    std::string vf_name = name_ctx->getText();
+    if(func_call_sign)
+      return vf_name; // call of a function
+    else {
+      auto res = project.Variable(vf_name);
+      assert(std::any_cast<std::any>(&res) == nullptr);
+      VType type = type_trait(res);
+      if(type == VType::tInteger) return std::any_cast<Integer>(res);
+      else if(type == VType::tBoolean) return std::any_cast<Boolean>(res);
+      else if(type == VType::tDecimal) return std::any_cast<Decimal>(res);
+      else if(type == VType::tString) return std::any_cast<String>(res);
+      else throw std::runtime_error("Invalid rvalue");
+    }
   } else if(auto number_ctx = ctx->NUMBER(); number_ctx) {
-    std::string number_str = number_ctx->toString();
-    if(number_str.find('.') == std::string::npos)
-      return to_Integer(number_str); // a small abuse. fix it later? // No. We have had many to_String()
-    else return to_Decimal(number_str);
-  } else if(auto string_vec = ctx->STRING(); !string_vec.empty()) {
+    std::string number_str = number_ctx->getText();
+    if(number_str.find('.') == std::string::npos) {
+      Integer res = to_Integer(number_str);
+      return res;
+    } else {
+      Decimal res = to_Decimal(number_str);
+      return res;
+    }
+  } else if(!ctx->STRING().empty()) {
     std::string res = "";
-    for(auto str_ptr: string_vec)
-      res += str_ptr->toString();
+    for(auto str_ptr: ctx->STRING()) {
+      assert(str_ptr);
+      std::string append = str_ptr->getText();
+      res += append.substr(1, append.length() - 2); // exclude the starting and ending "" or ''
+    }
     return res;
   } else if(ctx->NONE())
-    return nullptr;
+    return ConstNone;
   else if(ctx->TRUE())
     return true;
   else if(ctx->FALSE())
     return false;
-  else if(auto test_ctx = ctx->test(); test_ctx)
-    return visit(test_ctx);
-  else if(auto fstring_ctx = ctx->format_string(); fstring_ctx)
-    return visit(fstring_ctx);
+  else if(auto test_ctx = ctx->test(); test_ctx) {
+    auto res = visit(test_ctx);
+    assert(std::any_cast<std::any>(&res) == nullptr);
+    return res;
+  }
+  else if(auto fstring_ctx = ctx->format_string(); fstring_ctx) {
+    auto res = visit(fstring_ctx);
+    assert(std::any_cast<std::any>(&res) == nullptr);
+    return res;
+  }
 }
 std::any EvalVisitor::visitFormat_string(Python3Parser::Format_stringContext *ctx) {
   // return type: std::string (the final string)
@@ -451,25 +501,32 @@ std::any EvalVisitor::visitFormat_string(Python3Parser::Format_stringContext *ct
   std::size_t fmted_cnt = ctx->testlist().size();
   std::size_t raw_cnt = ctx->FORMAT_STRING_LITERAL().size();
   bool string_type = true; // raw, literal string comes first
-  std::string raw_string = ctx->toString();
+  std::string raw_string = ctx->getText();
   if(raw_string[2] == '{' && raw_string[3] != '{')
     string_type = false; // formatted string comes first
   for(std::size_t i = 0; i < std::min(fmted_cnt, raw_cnt); i++) {
+    auto test_list = std::any_cast<Tuple>(visit(ctx->testlist(i)));
+    std::string str = "";
+    for(std::size_t j = 0; j < test_list.size(); j++) {
+      str = str + to_String(test_list[j]);
+      if(j != test_list.size() - 1)
+        str += ", ";
+    }
     if(string_type)
-      res = res + ctx->FORMAT_STRING_LITERAL(i)->toString() + to_String(visit(ctx->testlist(i)));
-    else res = res + to_String(visit(ctx->testlist(i))) + ctx->FORMAT_STRING_LITERAL(i)->toString();
+      res = res + ctx->FORMAT_STRING_LITERAL(i)->getText() + str;
+    else res = res + str + ctx->FORMAT_STRING_LITERAL(i)->getText();
   }
   if(fmted_cnt > raw_cnt)
     res += to_String(visit(ctx->testlist(fmted_cnt - 1)));
   else if(raw_cnt > fmted_cnt)
-    res += ctx->FORMAT_STRING_LITERAL(raw_cnt - 1)->toString();
+    res += ctx->FORMAT_STRING_LITERAL(raw_cnt - 1)->getText();
   return res;
 }
 std::any EvalVisitor::visitTestlist(Python3Parser::TestlistContext *ctx) {
   // return type: Interpreter::Tuple (containing the rvalues of tests)
   Tuple res;
   for(const auto test_ctx: ctx->test())
-    res.push_back(std::any_cast<FunctionSuite::Initialize_List>(visit(test_ctx)));
+    res.push_back(visit(test_ctx));
   return res;
 }
 std::any EvalVisitor::visitArglist(Python3Parser::ArglistContext *ctx) {
@@ -485,14 +542,13 @@ std::any EvalVisitor::visitArgument(Python3Parser::ArgumentContext *ctx) {
   // This name isn't a valid variable name (Right?), so no crash here.
   if(ctx->ASSIGN()) {
     // it has a name
-    std::string var_name = ctx->test(0)->toString();
+    std::string var_name = ctx->test(0)->getText();
     // WHY CAN'T YOU CHANGE THE RULES? A (NAME "=" test) rule would be nice.
     std::any init_val = visit(ctx->test(1));
     return FunctionSuite::Initialize_Pair(var_name, init_val);
-  } else {
-    // it doesn't have a name
-    std::string var_name = FunctionSuite::UnassignedName;
-    std::any init_val = visit(ctx->test(0));
-    return FunctionSuite::Initialize_Pair(var_name, init_val);
   }
+  // else it doesn't have a name
+  std::string var_name = FunctionSuite::UnassignedName;
+  std::any init_val = visit(ctx->test(0));
+  return FunctionSuite::Initialize_Pair(var_name, init_val);
 }
