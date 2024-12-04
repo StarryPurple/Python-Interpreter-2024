@@ -10,11 +10,11 @@ std::any EvalVisitor::visitFile_input(Python3Parser::File_inputContext *ctx) {
   // return std::string.
   for(const auto stmt: ctx->stmt())
     visit(stmt);
-  return "Interpretation ended successfully. Thank you for using Python Interpreter. Bye!\n";
+  return ConstNone; // "Interpretation ended successfully. Thank you for using Python Interpreter. Bye!\n";
 }
 std::any EvalVisitor::visitFuncdef(Python3Parser::FuncdefContext *ctx) {
   // return empty tuple.
-  std::string function_name = ctx->NAME()->getText();
+  std::string function_name = ctx->NAME()->getText();/*
   if(function_name == "print" || function_name == "int" || function_name == "float"
     || function_name == "str" || function_name == "bool" || function_name == "None"
     || function_name ==  "True" || function_name == "False" || function_name == "def"
@@ -22,7 +22,7 @@ std::any EvalVisitor::visitFuncdef(Python3Parser::FuncdefContext *ctx) {
     || function_name == "if" || function_name == "elif" || function_name == "else"
     || function_name == "while" || function_name == "or" || function_name == "and"
     || function_name == "not")
-    throw std::runtime_error("Use of reserved keyword in function definition");
+    throw std::runtime_error("Use of reserved keyword in function definition");*/
   auto param_list = std::any_cast<
     std::vector<std::pair<std::string, std::any>>
     >(visit(ctx->parameters()));
@@ -59,7 +59,7 @@ std::any EvalVisitor::visitTypedargslist(Python3Parser::TypedargslistContext *ct
 }
 std::any EvalVisitor::visitTfpdef(Python3Parser::TfpdefContext *ctx) {
   // return type: std::string
-  std::string param_name = ctx->NAME()->getText();
+  std::string param_name = ctx->NAME()->getText();/*
   if(param_name == "print" || param_name == "int" || param_name == "float"
     || param_name == "str" || param_name == "bool" || param_name == "None"
     || param_name ==  "True" || param_name == "False" || param_name == "def"
@@ -67,7 +67,7 @@ std::any EvalVisitor::visitTfpdef(Python3Parser::TfpdefContext *ctx) {
     || param_name == "if" || param_name == "elif" || param_name == "else"
     || param_name == "while" || param_name == "or" || param_name == "and"
     || param_name == "not")
-    throw std::runtime_error("Use of reserved keyword in function definition");
+    throw std::runtime_error("Use of reserved keyword in function definition");*/
   return param_name;
 }
 std::any EvalVisitor::visitStmt(Python3Parser::StmtContext *ctx) {
@@ -114,12 +114,12 @@ std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
         type_trait(tmp[0]);
         val = tmp[0];
       }*/
-    std::vector<std::string> var_name_list = testlist_splitter(ctx->testlist(0)->getText());
+    std::vector<std::string> var_name_list = testlist_splitter(ctx->testlist(0)->getText());/*
     if(var_name_list.size() != value_list.size())
       throw std::runtime_error("Assignment with different parameter numbers");
     // augmented assignment is illegal for tuples?
     if(var_name_list.size() != 1)
-      throw std::runtime_error("Augmented assignment towards illegal type: \"tuple\"");
+      throw std::runtime_error("Augmented assignment towards illegal type: \"tuple\"");*/
     if(opr == "+=") {
       for(std::size_t i = 0; i < var_name_list.size(); i++) {
         auto res = project.Variable(var_name_list[i]) + value_list[i];
@@ -185,9 +185,9 @@ std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
   }
   for(std::size_t i = len - 1; i >= 1; i--) {
     // (unsigned long)i < 0 can't happen...
-    std::vector<std::string> var_name_list = testlist_splitter(ctx->testlist(i - 1)->getText());
+    std::vector<std::string> var_name_list = testlist_splitter(ctx->testlist(i - 1)->getText());/*
     if(var_name_list.size() != value_list.size())
-      throw std::runtime_error("Assignment with different parameter numbers");
+      throw std::runtime_error("Assignment with different parameter numbers");*/
     for(std::size_t j = 0; j < var_name_list.size(); j++) {
       VType type = type_trait(value_list[j]);
       if(type == VType::tInteger) project.Variable(var_name_list[j]) = std::any_cast<Integer>(value_list[j]);
@@ -457,69 +457,71 @@ std::any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
 
   // special judge for builtin functions
   if(func_name == "print") {
-    Tuple res;
+    Tuple res;/*
     for(auto [var_name, val]: initialize_list){
       if(var_name != FunctionSuite::UnassignedName)
         throw std::runtime_error("No variable name in \"print()\"");
       res.push_back(val);
-    }
+    }*/
     print(res);
     return ConstNone;
-  } else if(func_name == "int") {
+  } else if(func_name == "int") {/*
     if(initialize_list.size() != 1)
-      throw std::runtime_error("Wrong parameter number for \"int()\" (It should be 1)");
-    auto [var_name, val] = initialize_list[0];
+      throw std::runtime_error("Wrong parameter number for \"int()\" (It should be 1)");*/
+    auto [var_name, val] = initialize_list[0];/*
     if(var_name != FunctionSuite::UnassignedName)
-      throw std::runtime_error("No variable name in \"int()\"");
+      throw std::runtime_error("No variable name in \"int()\"");*/
     return to_Integer(val);
-  } else if(func_name == "float") {
+  } else if(func_name == "float") {/*
     if(initialize_list.size() != 1)
-      throw std::runtime_error("Wrong parameter number for \"float()\" (It should be 1)");
-    auto [var_name, val] = initialize_list[0];
+      throw std::runtime_error("Wrong parameter number for \"float()\" (It should be 1)");*/
+    auto [var_name, val] = initialize_list[0];/*
     if(var_name != FunctionSuite::UnassignedName)
-      throw std::runtime_error("No variable name in \"float()\"");
+      throw std::runtime_error("No variable name in \"float()\"");*/
     return to_Decimal(val);
-  } else if(func_name == "str") {
+  } else if(func_name == "str") {/*
     if(initialize_list.size() != 1)
-      throw std::runtime_error("Wrong parameter number for \"str()\" (It should be 1)");
-    auto [var_name, val] = initialize_list[0];
+      throw std::runtime_error("Wrong parameter number for \"str()\" (It should be 1)");*/
+    auto [var_name, val] = initialize_list[0];/*
     if(var_name != FunctionSuite::UnassignedName)
-      throw std::runtime_error("No variable name in \"instrt()\"");
+      throw std::runtime_error("No variable name in \"str()\"");*/
     return to_String(val);
-  } else if(func_name == "bool") {
+  } else if(func_name == "bool") {/*
     if(initialize_list.size() != 1)
-      throw std::runtime_error("Wrong parameter number for \"bool()\" (It should be 1)");
-    auto [var_name, val] = initialize_list[0];
+      throw std::runtime_error("Wrong parameter number for \"bool()\" (It should be 1)");*/
+    auto [var_name, val] = initialize_list[0];/*
     if(var_name != FunctionSuite::UnassignedName)
-      throw std::runtime_error("No variable name in \"bool()\"");
+      throw std::runtime_error("No variable name in \"bool()\"");*/
     return to_Boolean(val);
   }
 
   // other functions.
   // std::cerr << "calling " << func_name << std::endl;
+  /*
   if(function_map.count(func_name) == 0)
     throw std::runtime_error("Call of undefined function \"" + func_name + "\"");
+    */
   std::size_t func_ord = function_map[func_name];
   auto [function, suite_ctx] = function_list[func_ord];
   for(std::size_t i = 0, anon_pos = -1; i < initialize_list.size(); i++) {
     auto [var_name, init_val] = initialize_list[i];
     if(var_name == FunctionSuite::UnassignedName) {
-      anon_pos++;
+      anon_pos++;/*
       if(i != anon_pos)
-        throw std::runtime_error("Unnamed argument before named one(s) in function call");
+        throw std::runtime_error("Unnamed argument before named one(s) in function call");*/
       function.variable_space[i] = init_val;
-    } else {
+    } else {/*
       if(function.variable_map.count(var_name) == 0)
-        throw std::runtime_error("Undefined argument name in call of function");
-      std::size_t var_ord = function.variable_map[var_name];
+        throw std::runtime_error("Undefined argument name in call of function");*/
+      std::size_t var_ord = function.variable_map[var_name];/*
       if(var_ord <= anon_pos)
-        throw std::runtime_error("Reassign of an position-assigned argument");
+        throw std::runtime_error("Reassign of an position-assigned argument");*/
       function.variable_space[var_ord] = init_val;
     }
-  }
+  }/*
   for(const auto& init_val: function.variable_space)
     if(std::any_cast<bool>(init_val == ConstNone)) // A leak of namespace Interpreter?
-      throw std::runtime_error("Unassigned argument in function call");
+      throw std::runtime_error("Unassigned argument in function call");*/
   project.CallFunction(function);
   visit(suite_ctx); // should be an Interpreter::Tuple in std::any
   auto res = std::any_cast<Tuple>(project.GiveResult());
