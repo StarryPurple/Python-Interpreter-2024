@@ -25,8 +25,6 @@ enum class VType {
 
 VType type_trait(const std::any &);
 
-void unzip(std::any &);
-
 // builtin type-cast function.
 
 Integer to_Integer(const std::any &);
@@ -78,6 +76,9 @@ void print(const Tuple &);
 // builtin testlist splitter with spilt sign ",". removes whitespaces.
 // e.g.   "  1a e,  sa\n ,  e@eq " -> {"1ae", "sa\n", "e@eq"}
 std::vector<std::string> testlist_splitter(const std::string &);
+
+// builtin Tuple unzipper.
+void tuple_unzip(Tuple &);
 
 }
 

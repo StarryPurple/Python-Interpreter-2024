@@ -15,6 +15,7 @@ std::any EvalVisitor::visitFile_input(Python3Parser::File_inputContext *ctx) {
 std::any EvalVisitor::visitFuncdef(Python3Parser::FuncdefContext *ctx) {
   // return empty tuple.
   std::string function_name = ctx->NAME()->getText();
+  /*
   if(function_name == "print" || function_name == "int" || function_name == "float"
     || function_name == "str" || function_name == "bool" || function_name == "None"
     || function_name ==  "True" || function_name == "False" || function_name == "def"
@@ -23,6 +24,7 @@ std::any EvalVisitor::visitFuncdef(Python3Parser::FuncdefContext *ctx) {
     || function_name == "while" || function_name == "or" || function_name == "and"
     || function_name == "not")
     throw std::runtime_error("Use of reserved keyword in function definition");
+  */
   auto param_list = std::any_cast<
     std::vector<std::pair<std::string, std::any>>
     >(visit(ctx->parameters()));
@@ -60,6 +62,7 @@ std::any EvalVisitor::visitTypedargslist(Python3Parser::TypedargslistContext *ct
 std::any EvalVisitor::visitTfpdef(Python3Parser::TfpdefContext *ctx) {
   // return type: std::string
   std::string param_name = ctx->NAME()->getText();
+  /*
   if(param_name == "print" || param_name == "int" || param_name == "float"
     || param_name == "str" || param_name == "bool" || param_name == "None"
     || param_name ==  "True" || param_name == "False" || param_name == "def"
@@ -68,6 +71,7 @@ std::any EvalVisitor::visitTfpdef(Python3Parser::TfpdefContext *ctx) {
     || param_name == "while" || param_name == "or" || param_name == "and"
     || param_name == "not")
     throw std::runtime_error("Use of reserved keyword in function definition");
+  */
   return param_name;
 }
 std::any EvalVisitor::visitStmt(Python3Parser::StmtContext *ctx) {
@@ -100,11 +104,13 @@ std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
     // an augmented assignment
     std::string opr = std::any_cast<std::string>(visit(ctx->augassign()));
     auto value_list = std::any_cast<Tuple>(visit(ctx->testlist(1)));
+    tuple_unzip(value_list); // Important!
+    /*
     // value list may contain 1-sized tuples (as function results)
     // wo we must unzip it、
     while(value_list.size() == 1 && std::any_cast<Tuple>(&value_list[0]) != nullptr) {
       value_list = std::any_cast<Tuple>(value_list[0]);
-    }
+    }*/
     /*
     for(std::any &val: value_list)
       if(std::any_cast<Tuple>(&val) != nullptr) {
@@ -120,66 +126,32 @@ std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
     // augmented assignment is illegal for tuples?
     if(var_name_list.size() != 1)
       throw std::runtime_error("Augmented assignment towards illegal type: \"tuple\"");
+    // In case some std::any<std::any> happens
     if(opr == "+=") {
-      for(std::size_t i = 0; i < var_name_list.size(); i++) {
-        auto res = project.Variable(var_name_list[i]) + value_list[i];
-        VType type = type_trait(res);
-        if(type == VType::tInteger) project.Variable(var_name_list[i]) = std::any_cast<Integer>(res);
-        else if(type == VType::tDecimal) project.Variable(var_name_list[i]) = std::any_cast<Decimal>(res);
-        else if(type == VType::tBoolean) project.Variable(var_name_list[i]) = std::any_cast<Boolean>(res);
-        else if(type == VType::tString) project.Variable(var_name_list[i]) = std::any_cast<String>(res);
-      }
+      for(std::size_t i = 0; i < var_name_list.size(); i++)
+        project.Variable(var_name_list[i]) += value_list[i];
     } else if(opr == "-=") {
-      for(std::size_t i = 0; i < var_name_list.size(); i++) {
-        auto res = project.Variable(var_name_list[i]) - value_list[i];
-        VType type = type_trait(res);
-        if(type == VType::tInteger) project.Variable(var_name_list[i]) = std::any_cast<Integer>(res);
-        else if(type == VType::tDecimal) project.Variable(var_name_list[i]) = std::any_cast<Decimal>(res);
-        else if(type == VType::tBoolean) project.Variable(var_name_list[i]) = std::any_cast<Boolean>(res);
-        else if(type == VType::tString) project.Variable(var_name_list[i]) = std::any_cast<String>(res);
-      }
+      for(std::size_t i = 0; i < var_name_list.size(); i++)
+        project.Variable(var_name_list[i]) -= value_list[i];
     } else if(opr == "*=") {
-      for(std::size_t i = 0; i < var_name_list.size(); i++) {
-        auto res = project.Variable(var_name_list[i]) * value_list[i];
-        VType type = type_trait(res);
-        if(type == VType::tInteger) project.Variable(var_name_list[i]) = std::any_cast<Integer>(res);
-        else if(type == VType::tDecimal) project.Variable(var_name_list[i]) = std::any_cast<Decimal>(res);
-        else if(type == VType::tBoolean) project.Variable(var_name_list[i]) = std::any_cast<Boolean>(res);
-        else if(type == VType::tString) project.Variable(var_name_list[i]) = std::any_cast<String>(res);
-      }
+      for(std::size_t i = 0; i < var_name_list.size(); i++)
+        project.Variable(var_name_list[i]) *= value_list[i];
     } else if(opr == "/=") {
-      for(std::size_t i = 0; i < var_name_list.size(); i++) {
-        auto res = project.Variable(var_name_list[i]) / value_list[i];
-        VType type = type_trait(res);
-        if(type == VType::tInteger) project.Variable(var_name_list[i]) = std::any_cast<Integer>(res);
-        else if(type == VType::tDecimal) project.Variable(var_name_list[i]) = std::any_cast<Decimal>(res);
-        else if(type == VType::tBoolean) project.Variable(var_name_list[i]) = std::any_cast<Boolean>(res);
-        else if(type == VType::tString) project.Variable(var_name_list[i]) = std::any_cast<String>(res);
-      }
+      for(std::size_t i = 0; i < var_name_list.size(); i++)
+        project.Variable(var_name_list[i]) /= value_list[i];
     } else if(opr == "//=") {
-      for(std::size_t i = 0; i < var_name_list.size(); i++) {
-        auto res = project.Variable(var_name_list[i]) | value_list[i];
-        VType type = type_trait(res);
-        if(type == VType::tInteger) project.Variable(var_name_list[i]) = std::any_cast<Integer>(res);
-        else if(type == VType::tDecimal) project.Variable(var_name_list[i]) = std::any_cast<Decimal>(res);
-        else if(type == VType::tBoolean) project.Variable(var_name_list[i]) = std::any_cast<Boolean>(res);
-        else if(type == VType::tString) project.Variable(var_name_list[i]) = std::any_cast<String>(res);
-      }
+      for(std::size_t i = 0; i < var_name_list.size(); i++)
+        project.Variable(var_name_list[i]) |= value_list[i];
     } else if(opr == "%=") {
-      for(std::size_t i = 0; i < var_name_list.size(); i++) {
-        auto res = project.Variable(var_name_list[i]) % value_list[i];
-        VType type = type_trait(res);
-        if(type == VType::tInteger) project.Variable(var_name_list[i]) = std::any_cast<Integer>(res);
-        else if(type == VType::tDecimal) project.Variable(var_name_list[i]) = std::any_cast<Decimal>(res);
-        else if(type == VType::tBoolean) project.Variable(var_name_list[i]) = std::any_cast<Boolean>(res);
-        else if(type == VType::tString) project.Variable(var_name_list[i]) = std::any_cast<String>(res);
-      }
+      for(std::size_t i = 0; i < var_name_list.size(); i++)
+        project.Variable(var_name_list[i]) %= value_list[i];
     }
     return Tuple();
   }
   // else a multiple assignment
   std::size_t len = ctx->testlist().size();
   auto value_list = std::any_cast<Tuple>(visit(ctx->testlist(len - 1)));
+  tuple_unzip(value_list); // Important!
   while(value_list.size() == 1 && std::any_cast<Tuple>(&value_list[0]) != nullptr) {
     value_list = std::any_cast<Tuple>(value_list[0]);
   }
@@ -188,13 +160,8 @@ std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
     std::vector<std::string> var_name_list = testlist_splitter(ctx->testlist(i - 1)->getText());
     if(var_name_list.size() != value_list.size())
       throw std::runtime_error("Assignment with different parameter numbers");
-    for(std::size_t j = 0; j < var_name_list.size(); j++) {
-      VType type = type_trait(value_list[j]);
-      if(type == VType::tInteger) project.Variable(var_name_list[j]) = std::any_cast<Integer>(value_list[j]);
-      else if(type == VType::tDecimal) project.Variable(var_name_list[j]) = std::any_cast<Decimal>(value_list[j]);
-      else if(type == VType::tBoolean) project.Variable(var_name_list[j]) = std::any_cast<Boolean>(value_list[j]);
-      else if(type == VType::tString) project.Variable(var_name_list[j]) = std::any_cast<String>(value_list[j]);
-    }
+    for(std::size_t j = 0; j < var_name_list.size(); j++)
+      project.Variable(var_name_list[j]) = value_list[j];
   }
   return Tuple();
 }
@@ -543,7 +510,7 @@ std::any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
       return vf_name; // call of a function
     else {
       auto res = project.Variable(vf_name);
-      assert(std::any_cast<std::any>(&res) == nullptr);
+      // assert(std::any_cast<std::any>(&res) == nullptr);
       VType type = type_trait(res);
       if(type == VType::tInteger) return std::any_cast<Integer>(res);
       else if(type == VType::tBoolean) return std::any_cast<Boolean>(res);
@@ -604,9 +571,13 @@ std::any EvalVisitor::visitFormat_string(Python3Parser::Format_stringContext *ct
       if(j != test_list.size() - 1)
         str += " ";
     }
+    std::string literal = ctx->FORMAT_STRING_LITERAL(i)->getText();
+    for(std::size_t j = literal.length() - 1; j > 0; j--)
+      if(literal[j - 1] == literal[j] && (literal[j] == '{' || literal[j] == '}'))
+        literal.erase(j, 1);
     if(string_type)
-      res = res + ctx->FORMAT_STRING_LITERAL(i)->getText() + str;
-    else res = res + str + ctx->FORMAT_STRING_LITERAL(i)->getText();
+      res += literal + str;
+    else res += str + literal;
   }
   if(fmted_cnt > raw_cnt) {
     auto test_list = std::any_cast<Tuple>(visit(ctx->testlist(fmted_cnt - 1)));
@@ -618,8 +589,13 @@ std::any EvalVisitor::visitFormat_string(Python3Parser::Format_stringContext *ct
       }
     res += str;
   }
-  else if(raw_cnt > fmted_cnt)
-    res += ctx->FORMAT_STRING_LITERAL(raw_cnt - 1)->getText();
+  else if(raw_cnt > fmted_cnt) {
+    std::string literal = ctx->FORMAT_STRING_LITERAL(raw_cnt - 1)->getText();
+    for(std::size_t j = literal.length() - 1; j > 0; j--)
+      if(literal[j - 1] == literal[j] && (literal[j] == '{' || literal[j] == '}'))
+        literal.erase(j, 1);
+    res += literal;
+  }
   return res;
 }
 std::any EvalVisitor::visitTestlist(Python3Parser::TestlistContext *ctx) {
