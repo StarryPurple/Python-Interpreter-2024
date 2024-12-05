@@ -729,7 +729,7 @@ int2048 operator%(int2048 left, const int2048 &right) {
 int2048::operator double() {
   if(is_zero()) return 0;
   double res = 0;
-  for(int i = 0; i < storage.size(); i++)
+  for(int i = storage.size() - 1; i >= 0; i--)
     res = res * INT2048_BASE + storage[i];
   if(storage_sign == -1) res = -res;
   return res;

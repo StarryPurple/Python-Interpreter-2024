@@ -491,10 +491,7 @@ std::any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
   visit(suite_ctx); // should be an Interpreter::Tuple in std::any
   auto res = std::any_cast<Tuple>(project.GiveResult());
   project.ExitFunction();
-  // std::cerr << to_String(res[0]) << std::endl;
-  auto ans = (res.size() == 1 ? res[0] : res);
-  // std::cerr << func_name << " call completed" << std::endl;
-  return ans;
+  return res;
 }
 std::any EvalVisitor::visitTrailer(Python3Parser::TrailerContext *ctx) {
   // return type: FunctionSuite::Initialize_List (it is what you think it is)
