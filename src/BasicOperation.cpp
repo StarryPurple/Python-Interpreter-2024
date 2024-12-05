@@ -274,6 +274,9 @@ void print(const std::any &obj) {
       } else if(res[i] == '\'') {
         res.erase(i, 1);
         res[i - 1] = '\'';
+      } else if(res[i] == '\\') {
+        res.erase(i, 1);
+        res[i - 1] == '\\';
       }
   std::cout << res;
 }

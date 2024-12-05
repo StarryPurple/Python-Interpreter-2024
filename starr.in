@@ -1,1 +1,1 @@
-print(int(None))
+print("\\",f"\\")
