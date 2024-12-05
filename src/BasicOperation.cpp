@@ -275,14 +275,12 @@ void print(const std::any &obj) {
       } else if(res[i + 1] == '\'') {
         cur += '\'';
         i++;
+      } else if(res[i + 1] == '\\') {
+        cur += '\\';
+        i++;
       }
     } else cur += res[i];
   }
-
-        /* else if(res[i] == '\\') {
-        res.erase(i, 1);
-        res[i - 1] == '\\';
-        */ // idiv operator requires it
   std::cout << cur;
 }
 
