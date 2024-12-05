@@ -13,6 +13,7 @@ VType type_trait(const std::any &obj) {
     return VType::tString;
   else if(auto ptr = std::any_cast<None>(&obj); ptr)
     return VType::tNone;
+  else {std::cout << "Not here" << std::endl; return VType::tNone;}
   // else throw std::runtime_error("Type trait fails.");
 }
 

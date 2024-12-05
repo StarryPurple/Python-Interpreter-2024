@@ -414,7 +414,6 @@ std::any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
   auto trailer_ctx = ctx->trailer();
   if(trailer_ctx == nullptr){
     auto res = visit(atom_ctx); // A rvalue
-    VType type = type_trait(res);
     // unzip(res);
     return res;
     }
@@ -514,13 +513,7 @@ std::any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
     else {
       auto res = project.Variable(vf_name);
       // assert(std::any_cast<std::any>(&res) == nullptr);
-      VType type = type_trait(res);
-      if(type == VType::tInteger) return std::any_cast<Integer>(res);
-      else if(type == VType::tBoolean) return std::any_cast<Boolean>(res);
-      else if(type == VType::tDecimal) return std::any_cast<Decimal>(res);
-      else if(type == VType::tString) return std::any_cast<String>(res);
-      else if(type == VType::tNone) return std::any_cast<None>(res);
-      else throw std::runtime_error("Invalid rvalue");
+      return res;
     }
   } else if(auto number_ctx = ctx->NUMBER(); number_ctx) {
     std::string number_str = number_ctx->getText();
