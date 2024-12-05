@@ -572,15 +572,15 @@ std::any EvalVisitor::visitFormat_string(Python3Parser::Format_stringContext *ct
     std::string dealt = "";
     for(std::size_t j = 0; j < literal.length(); j++) {
       dealt += literal[j];
-      if(literal[j] == literal[j + 1] && (literal[j] == '{' && literal[j] == '}'))
+      if(literal[j] == literal[j + 1] && (literal[j] == '{' || literal[j] == '}'))
         j++;
     }
     if(string_type)
       res += dealt + str;
     else res += str + dealt;
   }
-  if(fmted_cnt > raw_cnt) {
-    auto test_list = std::any_cast<Tuple>(visit(ctx->testlist(fmted_cnt - 1)));
+  for(std::size_t j = raw_cnt; j < fmted_cnt; j++) {
+    auto test_list = std::any_cast<Tuple>(visit(ctx->testlist(j)));
       std::string str = "";
       for(std::size_t i = 0; i < test_list.size(); i++) {
         str = str + to_String(test_list[i]);
@@ -589,12 +589,12 @@ std::any EvalVisitor::visitFormat_string(Python3Parser::Format_stringContext *ct
       }
     res += str;
   }
-  else if(raw_cnt > fmted_cnt) {
-    std::string literal = ctx->FORMAT_STRING_LITERAL(raw_cnt - 1)->getText();
+  for(std::size_t j = fmted_cnt; j < raw_cnt; j++) {
+    std::string literal = ctx->FORMAT_STRING_LITERAL(j)->getText();
     std::string dealt = "";
     for(std::size_t i = 0; i < literal.length(); i++) {
       dealt += literal[i];
-      if(literal[i] == literal[i + 1] && (literal[i] == '{' && literal[i] == '}'))
+      if(literal[i] == literal[i + 1] && (literal[i] == '{' || literal[i] == '}'))
         i++;
     }
     res += dealt;
