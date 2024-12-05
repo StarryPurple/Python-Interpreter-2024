@@ -1,4 +1,4 @@
-# int f[421];
+# int f[421];a
 # int main() {
 # 	int a = 10000;
 # 	int b = 0;
