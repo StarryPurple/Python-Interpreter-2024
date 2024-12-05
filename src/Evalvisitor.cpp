@@ -282,7 +282,7 @@ std::any EvalVisitor::visitOr_test(Python3Parser::Or_testContext *ctx) {
   // unzip(res);
   for(std::size_t i = 1; i < ctx->and_test().size(); i++) {
     if(to_Boolean(res))
-      return res;
+      return true;
     res = visit(ctx->and_test(i));
   }
   return res;
@@ -293,7 +293,7 @@ std::any EvalVisitor::visitAnd_test(Python3Parser::And_testContext *ctx) {
   // unzip(res);
   for(std::size_t i = 1; i < ctx->not_test().size(); i++) {
     if(!to_Boolean(res))
-      return res;
+      return false;
     res = visit(ctx->not_test(i));
   }
 
@@ -312,7 +312,7 @@ std::any EvalVisitor::visitNot_test(Python3Parser::Not_testContext *ctx) {
       type_trait(tmp);
     }
     */
-    auto res = !to_Boolean(tmp);
+    bool res = !to_Boolean(tmp);
     return res;
   }
   else if(const auto comp_ctx = ctx->comparison(); comp_ctx) {

@@ -1,3 +1,0 @@
-a = "aaa"
-b = 'bbb'
-print(f"This is {{ {a}{b}")
