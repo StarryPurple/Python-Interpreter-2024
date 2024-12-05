@@ -13,8 +13,8 @@ FunctionSuite::FunctionSuite(const Initialize_List &param_list) {
 
 
 void FunctionSuite::DefineVariable(const std::string &var_name, const std::any &init_val) {
-  if(variable_map.find(var_name) != variable_map.end())
-    throw std::runtime_error("Re-definition of variable \"" + var_name + "\"");
+  /*if(variable_map.find(var_name) != variable_map.end())
+    throw std::runtime_error("Re-definition of variable \"" + var_name + "\"");*/
   variable_map.insert({var_name, variable_map.size()});
   variable_space.push_back(init_val);
 }

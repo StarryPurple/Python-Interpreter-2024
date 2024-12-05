@@ -121,11 +121,12 @@ std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
         val = tmp[0];
       }*/
     std::vector<std::string> var_name_list = testlist_splitter(ctx->testlist(0)->getText());
+    /*
     if(var_name_list.size() != value_list.size())
       throw std::runtime_error("Assignment with different parameter numbers");
     // augmented assignment is illegal for tuples?
     if(var_name_list.size() != 1)
-      throw std::runtime_error("Augmented assignment towards illegal type: \"tuple\"");
+      throw std::runtime_error("Augmented assignment towards illegal type: \"tuple\"");*/
     // In case some std::any<std::any> happens
     if(opr == "+=") {
       for(std::size_t i = 0; i < var_name_list.size(); i++)
@@ -158,8 +159,8 @@ std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
   for(std::size_t i = len - 1; i >= 1; i--) {
     // (unsigned long)i < 0 can't happen...
     std::vector<std::string> var_name_list = testlist_splitter(ctx->testlist(i - 1)->getText());
-    if(var_name_list.size() != value_list.size())
-      throw std::runtime_error("Assignment with different parameter numbers");
+    /*if(var_name_list.size() != value_list.size())
+      throw std::runtime_error("Assignment with different parameter numbers");*/
     for(std::size_t j = 0; j < var_name_list.size(); j++)
       project.Variable(var_name_list[j]) = value_list[j];
   }
@@ -428,61 +429,61 @@ std::any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
   if(func_name == "print") {
     Tuple res;
     for(auto [var_name, val]: initialize_list){
-      if(var_name != FunctionSuite::UnassignedName)
-        throw std::runtime_error("No variable name in \"print()\"");
+      /*if(var_name != FunctionSuite::UnassignedName)
+        throw std::runtime_error("No variable name in \"print()\"");*/
       res.push_back(val);
     }
     print(res);
     return ConstNone;
   } else if(func_name == "int") {
-    if(initialize_list.size() != 1)
-      throw std::runtime_error("Wrong parameter number for \"int()\" (It should be 1)");
+    /*if(initialize_list.size() != 1)
+      throw std::runtime_error("Wrong parameter number for \"int()\" (It should be 1)");*/
     auto [var_name, val] = initialize_list[0];
-    if(var_name != FunctionSuite::UnassignedName)
-      throw std::runtime_error("No variable name in \"int()\"");
+    /*if(var_name != FunctionSuite::UnassignedName)
+      throw std::runtime_error("No variable name in \"int()\"");*/
     return to_Integer(val);
   } else if(func_name == "float") {
-    if(initialize_list.size() != 1)
-      throw std::runtime_error("Wrong parameter number for \"float()\" (It should be 1)");
+    /*if(initialize_list.size() != 1)
+      throw std::runtime_error("Wrong parameter number for \"float()\" (It should be 1)");*/
     auto [var_name, val] = initialize_list[0];
-    if(var_name != FunctionSuite::UnassignedName)
-      throw std::runtime_error("No variable name in \"float()\"");
+    /*if(var_name != FunctionSuite::UnassignedName)
+      throw std::runtime_error("No variable name in \"float()\"");*/
     return to_Decimal(val);
   } else if(func_name == "str") {
-    if(initialize_list.size() != 1)
-      throw std::runtime_error("Wrong parameter number for \"str()\" (It should be 1)");
+    /*if(initialize_list.size() != 1)
+      throw std::runtime_error("Wrong parameter number for \"str()\" (It should be 1)");*/
     auto [var_name, val] = initialize_list[0];
-    if(var_name != FunctionSuite::UnassignedName)
-      throw std::runtime_error("No variable name in \"instrt()\"");
+    /*if(var_name != FunctionSuite::UnassignedName)
+      throw std::runtime_error("No variable name in \"instrt()\"");*/
     return to_String(val);
   } else if(func_name == "bool") {
-    if(initialize_list.size() != 1)
-      throw std::runtime_error("Wrong parameter number for \"bool()\" (It should be 1)");
+    /*if(initialize_list.size() != 1)
+      throw std::runtime_error("Wrong parameter number for \"bool()\" (It should be 1)");*/
     auto [var_name, val] = initialize_list[0];
-    if(var_name != FunctionSuite::UnassignedName)
-      throw std::runtime_error("No variable name in \"bool()\"");
+    /*if(var_name != FunctionSuite::UnassignedName)
+      throw std::runtime_error("No variable name in \"bool()\"");*/
     return to_Boolean(val);
   }
 
   // other functions.
   // std::cerr << "calling " << func_name << std::endl;
-  if(function_map.count(func_name) == 0)
-    throw std::runtime_error("Call of undefined function \"" + func_name + "\"");
+  /*if(function_map.count(func_name) == 0)
+    throw std::runtime_error("Call of undefined function \"" + func_name + "\"");*/
   std::size_t func_ord = function_map[func_name];
   auto [function, suite_ctx] = function_list[func_ord];
   for(std::size_t i = 0, anon_pos = -1; i < initialize_list.size(); i++) {
     auto [var_name, init_val] = initialize_list[i];
     if(var_name == FunctionSuite::UnassignedName) {
       anon_pos++;
-      if(i != anon_pos)
-        throw std::runtime_error("Unnamed argument before named one(s) in function call");
+      /*if(i != anon_pos)
+        throw std::runtime_error("Unnamed argument before named one(s) in function call");*/
       function.variable_space[i] = init_val;
     } else {
-      if(function.variable_map.count(var_name) == 0)
-        throw std::runtime_error("Undefined argument name in call of function");
+      /*if(function.variable_map.count(var_name) == 0)
+        throw std::runtime_error("Undefined argument name in call of function");*/
       std::size_t var_ord = function.variable_map[var_name];
-      if(var_ord <= anon_pos)
-        throw std::runtime_error("Reassign of an position-assigned argument");
+      /*if(var_ord <= anon_pos)
+        throw std::runtime_error("Reassign of an position-assigned argument");*/
       function.variable_space[var_ord] = init_val;
     }
   }

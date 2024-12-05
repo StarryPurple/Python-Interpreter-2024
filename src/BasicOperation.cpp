@@ -13,7 +13,7 @@ VType type_trait(const std::any &obj) {
     return VType::tString;
   else if(auto ptr = std::any_cast<None>(&obj); ptr)
     return VType::tNone;
-  else {std::cout << "Not here" << std::endl; return VType::tNone;}
+  else {return VType::tNone;}
   // else throw std::runtime_error("Type trait fails.");
 }
 
@@ -74,11 +74,11 @@ String to_String(const std::any &obj) {
 std::any operator+(const std::any &objL, const std::any &objR) {
   VType typeL = type_trait(objL), typeR = type_trait(objR);
   if(typeL == VType::tNone || typeR == VType::tNone)
-    throw std::runtime_error("Failure in operator \"+\".");
+    return ConstNone; // throw ...
   else if(typeL == VType::tString && typeR == VType::tString)
     return std::any_cast<String>(objL) + std::any_cast<String>(objR);
-  else if(typeL == VType::tString || typeR == VType::tString)
-    throw std::runtime_error("Failure in operator \"+\".");
+  /*else if(typeL == VType::tString || typeR == VType::tString)
+    throw std::runtime_error("Failure in operator \"+\".");*/
   else if(typeL == VType::tDecimal || typeR == VType::tDecimal)
     return to_Decimal(objL) + to_Decimal(objR);
   else return to_Integer(objL) + to_Integer(objR);
@@ -91,9 +91,9 @@ void operator+=(std::any &objL, const std::any &objR) {
 std::any operator-(const std::any &objL, const std::any &objR) {
   VType typeL = type_trait(objL), typeR = type_trait(objR);
   if(typeL == VType::tNone || typeR == VType::tNone)
-    throw std::runtime_error("Failure in operator \"-\".");
-  else if(typeL == VType::tString || typeR == VType::tString)
-    throw std::runtime_error("Failure in operator \"-\".");
+    return ConstNone;
+  /*else if(typeL == VType::tString || typeR == VType::tString)
+    throw std::runtime_error("Failure in operator \"-\".");*/
   else if(typeL == VType::tDecimal || typeR == VType::tDecimal)
     return to_Decimal(objL) - to_Decimal(objR);
   else return to_Integer(objL) - to_Integer(objR);
@@ -106,11 +106,11 @@ void operator-=(std::any &objL, const std::any &objR) {
 std::any operator*(const std::any &objL, const std::any &objR) {
   VType typeL = type_trait(objL), typeR = type_trait(objR);
   if(typeL == VType::tNone || typeR == VType::tNone)
-    throw std::runtime_error("Failure in operator \"*\".");
+    return ConstNone; // throw std::runtime_error("Failure in operator \"*\".");
   else if(typeL == VType::tString && typeR == VType::tInteger) {
     Integer times = std::any_cast<Integer>(objR);
     if(times.storage_sign == -1 && !times.is_zero())
-      throw std::runtime_error("Failure in operator \"*\".");
+      return ""; // throw std::runtime_error("Failure in operator \"*\".");
     String str = std::any_cast<String>(objL);
     String res = "";
     while(!times.is_zero()) {
@@ -121,7 +121,7 @@ std::any operator*(const std::any &objL, const std::any &objR) {
   } else if(typeL == VType::tInteger && typeR == VType::tString) {
     Integer times = std::any_cast<Integer>(objL);
     if(times.storage_sign == -1 && !times.is_zero())
-      throw std::runtime_error("Failure in operator \"*\".");
+      return ""; // throw std::runtime_error("Failure in operator \"*\".");
     String str = std::any_cast<String>(objR);
     String res = "";
     while(!times.is_zero()) {
@@ -129,8 +129,8 @@ std::any operator*(const std::any &objL, const std::any &objR) {
       times -= 1;
     }
     return res;
-  } else if(typeL == VType::tString || typeR == VType::tString)
-    throw std::runtime_error("Failure in operator \"*\".");
+  }/* else if(typeL == VType::tString || typeR == VType::tString)
+    throw std::runtime_error("Failure in operator \"*\".");*/
   else if(typeL == VType::tDecimal || typeR == VType::tDecimal)
     return to_Decimal(objL) * to_Decimal(objR);
   else return to_Integer(objL) * to_Integer(objR);
@@ -143,9 +143,9 @@ void operator*=(std::any &objL, const std::any &objR) {
 std::any operator/(const std::any &objL, const std::any &objR) {
   VType typeL = type_trait(objL), typeR = type_trait(objR);
   if(typeL == VType::tNone || typeR == VType::tNone)
-    throw std::runtime_error("Failure in operator \"/\".");
-  else if(typeL == VType::tString || typeR == VType::tString)
-    throw std::runtime_error("Failure in operator \"/\".");
+    return ConstNone; // throw std::runtime_error("Failure in operator \"/\".");
+  /*else if(typeL == VType::tString || typeR == VType::tString)
+    throw std::runtime_error("Failure in operator \"/\".");*/
   return to_Decimal(objL) / to_Decimal(objR);
 }
 
@@ -156,9 +156,9 @@ void operator/=(std::any &objL, const std::any &objR) {
 std::any operator|(const std::any &objL, const std::any &objR) {
   VType typeL = type_trait(objL), typeR = type_trait(objR);
   if(typeL == VType::tNone || typeR == VType::tNone)
-    throw std::runtime_error("Failure in operator \"//\".");
-  else if(typeL == VType::tString || typeR == VType::tString)
-    throw std::runtime_error("Failure in operator \"//\".");
+    return ConstNone; // throw std::runtime_error("Failure in operator \"//\".");
+  /*else if(typeL == VType::tString || typeR == VType::tString)
+    throw std::runtime_error("Failure in operator \"//\".");*/
   else if(typeL == VType::tDecimal || typeR == VType::tDecimal)
     return std::floor(to_Decimal(objL) / to_Decimal(objR));
   else return to_Integer(objL) / to_Integer(objR);
@@ -171,9 +171,9 @@ void operator|=(std::any &objL, const std::any &objR) {
 std::any operator%(const std::any &objL, const std::any &objR) {
   VType typeL = type_trait(objL), typeR = type_trait(objR);
   if(typeL == VType::tNone || typeR == VType::tNone)
-    throw std::runtime_error("Failure in operator \"%\".");
-  else if(typeL == VType::tString || typeR == VType::tString)
-    throw std::runtime_error("Failure in operator \"%\".");
+    return ConstNone; // throw std::runtime_error("Failure in operator \"%\".");
+  /* else if(typeL == VType::tString || typeR == VType::tString)
+    throw std::runtime_error("Failure in operator \"%\".");*/
   else if(typeL == VType::tDecimal || typeR == VType::tDecimal) {
     Decimal DL = to_Decimal(objL), DR = to_Decimal(objR);
     return DL - std::floor(DL / DR) * DR;
@@ -197,7 +197,7 @@ std::any operator-(const std::any &obj) {
     return -std::any_cast<Decimal>(obj);
   else if(type == VType::tBoolean)
     return std::any_cast<Boolean>(obj) ? -1 : 0;
-  else throw std::runtime_error("Failure in Abel inversion \"-\".");
+  else return obj; //throw std::runtime_error("Failure in Abel inversion \"-\".");
 }
 
 std::any operator==(const std::any &objL, const std::any &objR) {
