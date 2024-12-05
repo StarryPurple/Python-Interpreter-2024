@@ -491,6 +491,8 @@ std::any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
   visit(suite_ctx); // should be an Interpreter::Tuple in std::any
   auto res = std::any_cast<Tuple>(project.GiveResult());
   project.ExitFunction();
+  tuple_unzip(res);
+  if(res.size() == 1) return res[0];
   return res;
 }
 std::any EvalVisitor::visitTrailer(Python3Parser::TrailerContext *ctx) {
