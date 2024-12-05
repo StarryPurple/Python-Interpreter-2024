@@ -24,6 +24,7 @@ Integer to_Integer(const std::any &obj) {
     case VType::tDecimal: return std::any_cast<Decimal>(obj); // double -> long long
     case VType::tBoolean: return std::any_cast<Boolean>(obj) ? 1 : 0;
     case VType::tString: return std::any_cast<String>(obj); // int2048 builtin
+    case VType::tNone: return 0;
     // default: throw std::runtime_error("Value conversion to type \"Integer\" fails.");
   }
 }
@@ -35,6 +36,7 @@ Decimal to_Decimal(const std::any &obj) {
     case VType::tDecimal: return std::any_cast<Decimal>(obj); // return self
     case VType::tBoolean: return std::any_cast<Boolean>(obj) ? 1.0 : 0.0;
     case VType::tString: return std::stod(std::any_cast<String>(obj));
+    case VType::tNone: return 0.0;
     // default: throw std::runtime_error("Value conversion to type \"Decimal\" fails.");
   }
 }
@@ -54,7 +56,7 @@ Boolean to_Boolean(const std::any &obj) {
     case VType::tDecimal: return std::any_cast<Decimal>(obj) != 0;
     case VType::tBoolean: return std::any_cast<Boolean>(obj);
     case VType::tString: return std::any_cast<String>(obj) != "";
-    case VType::tNone: return true; // Is this line acceptable?
+    case VType::tNone: return false; // Is this line acceptable?
     default: throw std::runtime_error("Value conversion to type \"Boolean\" fails.");
   }
 }
