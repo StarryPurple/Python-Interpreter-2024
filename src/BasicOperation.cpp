@@ -259,22 +259,28 @@ std::any operator>=(const std::any &objL, const std::any &objR) {
 }
 
 void print(const std::any &obj) {
-  std::string res = to_String(obj);
-  for(std::size_t i = res.length() - 1; i > 0; i--)
-    if(res[i - 1] == '\\')
-      if(res[i] == 'n') {
-        res.erase(i, 1);
-        res[i - 1] = '\n';
-      } else if(res[i] == 't') {
-        res.erase(i, 1);
-        res[i - 1] = '\t';
-      } else if(res[i] == '\"') {
-        res.erase(i, 1);
-        res[i - 1] = '\"';
-      } else if(res[i] == '\'') {
-        res.erase(i, 1);
-        res[i - 1] = '\'';
+  std::string literal = to_String(obj);
+  std::string res = "";
+  for(std::size_t i = 0; i < literal.size(); i++) {
+    if(literal[i] == '\\') {
+      if(literal[i + 1] == '\\') {
+        res += '\\';
+        i++;
+      } else if(literal[i + 1] == 'n') {
+        res += '\n';
+        i++;
+      } else if(literal[i + 1] == 't') {
+        res += '\t';
+        i++;
+      } else if(literal[i + 1] == '\"') {
+        res += '\"';
+        i++;
+      } else if(literal[i + 1] == '\'') {
+        res += '\'';
+        i++;
       }
+    } else res += literal[i];
+  }
   std::cout << res;
 }
 
