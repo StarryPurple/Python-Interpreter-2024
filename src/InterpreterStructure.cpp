@@ -48,7 +48,7 @@ std::any &PythonProject::Variable(const std::string &var_name) {
     if(function_stack[pos].variable_map.count(var_name) > 0)
       return function_stack[pos].LocalVariable(var_name);
     pos--;
-  }*/ // wrong grammer
+  }*/ // wrong grammar
   // local
   if(function_stack.back().variable_map.count(var_name) > 0)
     return function_stack.back().LocalVariable(var_name);

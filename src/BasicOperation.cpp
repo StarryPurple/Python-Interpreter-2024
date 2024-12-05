@@ -206,14 +206,16 @@ std::any operator==(const std::any &objL, const std::any &objR) {
     return false;
   else if(typeL == VType::tString && typeR == VType::tString)
     return std::any_cast<String>(objL) == std::any_cast<String>(objR);
-  else if(typeL == VType::tString && std::any_cast<String>(objL) == "")
+  else if(typeL == VType::tString && std::any_cast<String>(objL).empty())
     return to_Boolean(objR) == false;
-  else if(typeR == VType::tString && std::any_cast<String>(objR) == "")
+  else if(typeR == VType::tString && std::any_cast<String>(objR).empty())
     return to_Boolean(objL) == false;
   else if(typeL == VType::tString || typeR == VType::tString)
     return false;
-  else if(typeL == VType::tDecimal || typeR == VType::tDecimal)
-    return to_Decimal(objL) == to_Decimal(objR);
+  else if(typeL == VType::tDecimal || typeR == VType::tDecimal) {
+    Decimal dlt = to_Decimal(objL) - to_Decimal(objR);
+    return (dlt < 0.0000004 && -dlt < 0.0000004);
+  }
   else if(typeL == VType::tInteger || typeR == VType::tInteger)
     return to_Integer(objL) == to_Integer(objR);
   else return std::any_cast<Boolean>(objL) == std::any_cast<Boolean>(objR);
@@ -233,8 +235,10 @@ std::any operator<(const std::any &objL, const std::any &objR) {
     return std::any_cast<String>(objL) < std::any_cast<String>(objR);
   else if(typeL == VType::tString || typeR == VType::tString)
     return false;
-  else if(typeL == VType::tDecimal || typeR == VType::tDecimal)
-    return to_Decimal(objL) < to_Decimal(objR);
+  else if(typeL == VType::tDecimal || typeR == VType::tDecimal) {
+    Decimal res = to_Decimal(objR) - to_Decimal(objL);
+    return res > 0.0000004;
+  }
   else return to_Integer(objL) < to_Integer(objR);
 }
 
@@ -271,8 +275,10 @@ void print(const std::any &obj) {
 }
 
 void print(const Tuple &tuple) {
-  auto size = tuple.size();
-  for(const auto &obj: tuple) {
+  Tuple ntuple = tuple;
+  tuple_unzip(ntuple);
+  auto size = ntuple.size();
+  for(const auto &obj: ntuple) {
     print(obj);
     size--;
     if(size > 0)

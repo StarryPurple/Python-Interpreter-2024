@@ -325,19 +325,22 @@ std::any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
   // unzip(res);
   if(ctx->arith_expr().size() == 1)
     return res;
+  std::any ans;
   for(std::size_t i = 1; i < ctx->arith_expr().size(); i++) {
     auto opr = std::any_cast<std::string>(visit(ctx->comp_op(i - 1)));
     auto tmp = visit(ctx->arith_expr(i));
     // assert(std::any_cast<std::any>(&res) == nullptr);
-    if(opr == ">") res = (res > tmp);
-    else if(opr == "<") res = (res < tmp);
-    else if(opr == "==")
-      res = (res == tmp);
-    else if(opr == "!=") res = (res != tmp);
-    else if(opr == "<=") res = (res <= tmp);
-    else if(opr == ">=") res = (res >= tmp);
+    if(opr == ">") ans = (res > tmp);
+    else if(opr == "<") ans = (res < tmp);
+    else if(opr == "==") ans = (res == tmp);
+    else if(opr == "!=") ans = (res != tmp);
+    else if(opr == "<=") ans = (res <= tmp);
+    else if(opr == ">=") ans = (res >= tmp);
+    if(!to_Boolean(ans))
+      return ans; // false
+    res = tmp;
   }
-  return res;
+  return ans;
 }
 std::any EvalVisitor::visitComp_op(Python3Parser::Comp_opContext *ctx) {
   // return type: std::string (what the operator is)
@@ -484,9 +487,10 @@ std::any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
       function.variable_space[var_ord] = init_val;
     }
   }
+  /*
   for(const auto& init_val: function.variable_space)
     if(std::any_cast<bool>(init_val == ConstNone)) // A leak of namespace Interpreter?
-      throw std::runtime_error("Unassigned argument in function call");
+      throw std::runtime_error("Unassigned argument in function call");*/
   project.CallFunction(function);
   visit(suite_ctx); // should be an Interpreter::Tuple in std::any
   auto res = std::any_cast<Tuple>(project.GiveResult());
