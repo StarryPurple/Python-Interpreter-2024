@@ -19,6 +19,6 @@ int main(int argc, const char *argv[]) {
 	tree::ParseTree *tree = parser.file_input();
 	EvalVisitor visitor;
 	visitor.visit(tree);
-	// fclose(stdin); fclose(stdout);
-	return 0;
+	fclose(stdin); fclose(stdout);
+	// return 0;
 }

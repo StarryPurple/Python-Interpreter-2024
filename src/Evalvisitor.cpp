@@ -572,7 +572,7 @@ std::any EvalVisitor::visitFormat_string(Python3Parser::Format_stringContext *ct
     std::string dealt = "";
     for(std::size_t j = 0; j < literal.length(); j++) {
       dealt += literal[j];
-      if(literal[j] == literal[j + 1] || (literal[j] == '{' && literal[j] == '}'))
+      if(literal[j] == literal[j + 1] && (literal[j] == '{' && literal[j] == '}'))
         j++;
     }
     if(string_type)
@@ -594,7 +594,7 @@ std::any EvalVisitor::visitFormat_string(Python3Parser::Format_stringContext *ct
     std::string dealt = "";
     for(std::size_t i = 0; i < literal.length(); i++) {
       dealt += literal[i];
-      if(literal[i] == literal[i + 1] || (literal[i] == '{' && literal[i] == '}'))
+      if(literal[i] == literal[i + 1] && (literal[i] == '{' && literal[i] == '}'))
         i++;
     }
     res += dealt;

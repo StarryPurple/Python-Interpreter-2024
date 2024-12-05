@@ -260,25 +260,30 @@ std::any operator>=(const std::any &objL, const std::any &objR) {
 
 void print(const std::any &obj) {
   std::string res = to_String(obj);
-  for(std::size_t i = res.length() - 1; i > 0; i--)
-    if(res[i - 1] == '\\')
-      if(res[i] == 'n') {
-        res.erase(i, 1);
-        res[i - 1] = '\n';
-      } else if(res[i] == 't') {
-        res.erase(i, 1);
-        res[i - 1] = '\t';
-      } else if(res[i] == '\"') {
-        res.erase(i, 1);
-        res[i - 1] = '\"';
-      } else if(res[i] == '\'') {
-        res.erase(i, 1);
-        res[i - 1] = '\'';
-      } else if(res[i] == '\\') {
+  std::string cur = "";
+  for(std::size_t i = 0; i < res.length(); i++) {
+    if(res[i] == '\\') {
+      if(res[i + 1] == 'n') {
+        cur += '\n';
+        i++;
+      } else if(res[i + 1] == 't') {
+        cur += '\t';
+        i++;
+      } else if(res[i + 1] == '\"') {
+        cur += '\"';
+        i++;
+      } else if(res[i + 1] == '\'') {
+        cur += '\'';
+        i++;
+      }
+    } else cur += res[i];
+  }
+
+        /* else if(res[i] == '\\') {
         res.erase(i, 1);
         res[i - 1] == '\\';
-      }
-  std::cout << res;
+        */ // idiv operator requires it
+  std::cout << cur;
 }
 
 void print(const Tuple &tuple) {
