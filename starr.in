@@ -1,0 +1,11 @@
+i = 0
+while i <= 9:
+    j = 0
+    output_str = ""
+    while j <= 9:
+        if j != 0:
+            output_str = f"{output_str}{"\t"}"
+        output_str = f"{output_str}{i}*{j}{"="}{i*j}"
+        j = j + 1
+    print(output_str)
+    i = i + 1

@@ -9,8 +9,8 @@ using namespace antlr4;
 //       if you really need to regenerate,please ask TA for help.
 int main(int argc, const char *argv[]) {
 	// TODO: please don't modify the code below the construction of ifs if you want to use visitor mode
-	// freopen("/home/starr/Projects/Python-Interpreter-2024/starr.in", "r", stdin);
-	// freopen("/home/starr/Projects/Python-Interpreter-2024/starr.out", "w", stdout);
+	freopen("/home/starr/Projects/Python-Interpreter-2024/starr.in", "r", stdin);
+	freopen("/home/starr/Projects/Python-Interpreter-2024/starr.out", "w", stdout);
 	ANTLRInputStream input(std::cin);
 	Python3Lexer lexer(&input);
 	CommonTokenStream tokens(&lexer);
@@ -19,6 +19,6 @@ int main(int argc, const char *argv[]) {
 	tree::ParseTree *tree = parser.file_input();
 	EvalVisitor visitor;
 	visitor.visit(tree);
-	// fclose(stdin); fclose(stdout);
+	fclose(stdin); fclose(stdout);
 	return 0;
 }
