@@ -20,8 +20,8 @@ void FunctionSuite::DefineVariable(const std::string &var_name, const std::any &
 }
 
 std::any &FunctionSuite::LocalVariable(const std::string &var_name) {
-  /*if(variable_map.find(var_name) == variable_map.end())
-    DefineVariable(var_name, Interpreter::ConstNone);*/
+  if(variable_map.find(var_name) == variable_map.end())
+    DefineVariable(var_name, Interpreter::ConstNone);
   return variable_space[variable_map[var_name]];
 }
 
