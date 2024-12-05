@@ -13,7 +13,7 @@ VType type_trait(const std::any &obj) {
     return VType::tString;
   else if(auto ptr = std::any_cast<None>(&obj); ptr)
     return VType::tNone;
-  else throw std::runtime_error("Type trait fails.");
+  // else throw std::runtime_error("Type trait fails.");
 }
 
 Integer to_Integer(const std::any &obj) {
@@ -23,7 +23,7 @@ Integer to_Integer(const std::any &obj) {
     case VType::tDecimal: return std::any_cast<Decimal>(obj); // double -> long long
     case VType::tBoolean: return std::any_cast<Boolean>(obj) ? 1 : 0;
     case VType::tString: return std::any_cast<String>(obj); // int2048 builtin
-    default: throw std::runtime_error("Value conversion to type \"Integer\" fails.");
+    // default: throw std::runtime_error("Value conversion to type \"Integer\" fails.");
   }
 }
 
@@ -34,16 +34,16 @@ Decimal to_Decimal(const std::any &obj) {
     case VType::tDecimal: return std::any_cast<Decimal>(obj); // return self
     case VType::tBoolean: return std::any_cast<Boolean>(obj) ? 1.0 : 0.0;
     case VType::tString: return std::stod(std::any_cast<String>(obj));
-    default: throw std::runtime_error("Value conversion to type \"Decimal\" fails.");
+    // default: throw std::runtime_error("Value conversion to type \"Decimal\" fails.");
   }
 }
 
 Boolean to_Boolean(const std::any &obj) {
   // Tuple special judge
   if(std::any_cast<Tuple>(&obj) != nullptr) {
-    Tuple tmp = std::any_cast<Tuple>(obj);
+    Tuple tmp = std::any_cast<Tuple>(obj);/*
     if(tmp.size() != 1)
-      throw std::runtime_error("Don't converse Tuples to Boolean.");
+      throw std::runtime_error("Don't converse Tuples to Boolean.");*/
     return to_Boolean(tmp[0]);
   }
   VType type = type_trait(obj);
@@ -193,6 +193,8 @@ std::any operator-(const std::any &obj) {
     return -std::any_cast<Integer>(obj);
   else if(type == VType::tDecimal)
     return -std::any_cast<Decimal>(obj);
+  else if(type == VType::tBoolean)
+    return std::any_cast<Boolean>(obj) ? -1 : 0;
   else throw std::runtime_error("Failure in Abel inversion \"-\".");
 }
 
