@@ -553,53 +553,25 @@ std::any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
 std::any EvalVisitor::visitFormat_string(Python3Parser::Format_stringContext *ctx) {
   // return type: std::string (the final string)
   // todo: complete it later on.
-  std::string res = "";
-  std::size_t fmted_cnt = ctx->testlist().size();
-  std::size_t raw_cnt = ctx->FORMAT_STRING_LITERAL().size();
-  bool string_type = true; // raw, literal string comes first
-  std::string raw_string = ctx->getText();
-  if(raw_string[2] == '{' && raw_string[3] != '{')
-    string_type = false; // formatted string comes first
-  for(std::size_t i = 0; i < std::min(fmted_cnt, raw_cnt); i++) {
-    auto test_list = std::any_cast<Tuple>(visit(ctx->testlist(i)));
-    std::string str = "";
-    for(int j = 0; j < test_list.size(); j++) {
-      str = str + to_String(test_list[j]);
-      if(j != test_list.size() - 1)
-        str += " ";
+  const std::string raw_string = ctx->getText();
+  const std::size_t raw_length = raw_string.length();
+  std::string res_string;
+  int fmt_cnt = -1;
+  for(std::size_t pos = 2; pos < raw_length - 1; pos++) {
+    if(raw_string[pos] == '{' && (pos == raw_length - 2 || raw_string[pos + 1] != '{')) {
+      // formatted string starting point
+      fmt_cnt++;
+      res_string += to_String(std::any_cast<Tuple>(visit(ctx->testlist(fmt_cnt)))[0]);
+      while(!(raw_string[pos] == '}' && (pos == raw_length - 2 || raw_string[pos + 1] != '}')))
+        pos++;
+      continue;
     }
-    std::string literal = ctx->FORMAT_STRING_LITERAL(i)->getText();
-    std::string dealt = "";
-    for(std::size_t j = 0; j < literal.length(); j++) {
-      dealt += literal[j];
-      if(literal[j] == literal[j + 1] && (literal[j] == '{' || literal[j] == '}'))
-        j++;
-    }
-    if(string_type)
-      res += dealt + str;
-    else res += str + dealt;
+    res_string += raw_string[pos];
+    if(pos < raw_length - 2 && raw_string[pos] == raw_string[pos + 1]
+      && (raw_string[pos] == '{' || raw_string[pos] == '}'))
+      pos++;
   }
-  for(std::size_t j = raw_cnt; j < fmted_cnt; j++) {
-    auto test_list = std::any_cast<Tuple>(visit(ctx->testlist(j)));
-      std::string str = "";
-      for(std::size_t i = 0; i < test_list.size(); i++) {
-        str = str + to_String(test_list[i]);
-        if(i != test_list.size() - 1)
-          str += " ";
-      }
-    res += str;
-  }
-  for(std::size_t j = fmted_cnt; j < raw_cnt; j++) {
-    std::string literal = ctx->FORMAT_STRING_LITERAL(j)->getText();
-    std::string dealt = "";
-    for(std::size_t i = 0; i < literal.length(); i++) {
-      dealt += literal[i];
-      if(literal[i] == literal[i + 1] && (literal[i] == '{' || literal[i] == '}'))
-        i++;
-    }
-    res += dealt;
-  }
-  return res;
+  return res_string;
 }
 std::any EvalVisitor::visitTestlist(Python3Parser::TestlistContext *ctx) {
   // return type: Interpreter::Tuple (containing the rvalues of tests), may be a Tuple of Tuples
