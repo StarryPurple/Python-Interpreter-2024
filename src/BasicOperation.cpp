@@ -44,6 +44,7 @@ Boolean to_Boolean(const std::any &obj) {
     Tuple tmp = std::any_cast<Tuple>(obj);/*
     if(tmp.size() != 1)
       throw std::runtime_error("Don't converse Tuples to Boolean.");*/
+    if(tmp.size() == 0) return false;
     return to_Boolean(tmp[0]);
   }
   VType type = type_trait(obj);
