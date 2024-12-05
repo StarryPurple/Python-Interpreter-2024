@@ -3,7 +3,7 @@
 
 #include "BasicOperation.h"
 #include <utility>
-#include <map>
+#include <unordered_map>
 
 // The variable map and variable space will be initially filled through funcdef,
 // Then the object will be stored as a template,
@@ -20,7 +20,7 @@ public:
 
 
   // variables listed in the order that parameters are given
-  std::map<std::string, int> variable_map;
+  std::unordered_map<std::string, int> variable_map;
   Variable_Space variable_space;
 
   FunctionSuite() = default;
