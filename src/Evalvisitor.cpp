@@ -557,21 +557,21 @@ std::any EvalVisitor::visitFormat_string(Python3Parser::Format_stringContext *ct
   // todo: complete it later on.
   const std::string raw_string = ctx->getText();
   const std::size_t raw_length = raw_string.length();
+  std::size_t testlist_cnt = ctx->testlist().size();
   std::string res_string;
   int fmt_cnt = -1;
   for(std::size_t pos = 2; pos < raw_length - 1; pos++) {
-    if(raw_string[pos] == '{' && (pos == raw_length - 2 || raw_string[pos + 1] != '{')) {
-      // formatted string starting point
-      fmt_cnt++;
-      res_string += to_String(std::any_cast<Tuple>(visit(ctx->testlist(fmt_cnt)))[0]);
-      while(!(raw_string[pos] == '}'))
-        pos++;
-      continue;
-    }
-    res_string += raw_string[pos];
-    if(pos < raw_length - 2 && raw_string[pos] == raw_string[pos + 1]
-      && (raw_string[pos] == '{' || raw_string[pos] == '}'))
+    char l = raw_string[pos], r = raw_string[pos + 1];
+    if(l == r && (l == '{' || l == '}')) {
+      res_string += l;
       pos++;
+    } else if(l != r && l == '{') {
+      fmt_cnt++;
+      if(testlist_cnt <= fmt_cnt) throw std::runtime_error("");
+      std::string tst_string = to_String(visit(ctx->testlist(fmt_cnt)));
+      res_string += tst_string;
+      do pos++; while(pos < raw_length - 1 && raw_string[pos] != '}');
+    } else res_string += l;
   }
   return res_string;
 }
