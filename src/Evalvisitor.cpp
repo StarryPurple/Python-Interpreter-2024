@@ -564,7 +564,7 @@ std::any EvalVisitor::visitFormat_string(Python3Parser::Format_stringContext *ct
       // formatted string starting point
       fmt_cnt++;
       res_string += to_String(std::any_cast<Tuple>(visit(ctx->testlist(fmt_cnt)))[0]);
-      while(!(raw_string[pos] == '}' && (pos == raw_length - 2 || raw_string[pos + 1] != '}')))
+      while(!(raw_string[pos] == '}'))
         pos++;
       continue;
     }
