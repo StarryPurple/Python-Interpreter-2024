@@ -25,9 +25,7 @@ std::any EvalVisitor::visitFuncdef(Python3Parser::FuncdefContext *ctx) {
     || function_name == "not")
     throw std::runtime_error("Use of reserved keyword in function definition");
   */
-  auto param_list = std::any_cast<
-    std::vector<std::pair<std::string, std::any>>
-    >(visit(ctx->parameters()));
+  auto param_list = std::any_cast<FunctionSuite::Initialize_List>(visit(ctx->parameters()));
   FunctionSuite function(param_list);
   function.func_name = function_name;
   function_map.insert({function_name, function_map.size()});
@@ -76,8 +74,6 @@ std::any EvalVisitor::visitTfpdef(Python3Parser::TfpdefContext *ctx) {
 }
 std::any EvalVisitor::visitStmt(Python3Parser::StmtContext *ctx) {
   // return type: Interpreter::Tuple
-  if(project.IsBreak() || project.IsContinue() || project.IsReturn())
-    return Tuple();
   auto simple_ctx = ctx->simple_stmt();
   auto compound_ctx = ctx->compound_stmt();
   if(simple_ctx)
@@ -455,7 +451,7 @@ std::any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
       throw std::runtime_error("Wrong parameter number for \"str()\" (It should be 1)");*/
     auto [var_name, val] = initialize_list[0];
     /*if(var_name != FunctionSuite::UnassignedName)
-      throw std::runtime_error("No variable name in \"instrt()\"");*/
+      throw std::runtime_error("No variable name in \"str()\"");*/
     return to_String(val);
   } else if(func_name == "bool") {
     /*if(initialize_list.size() != 1)
@@ -470,23 +466,17 @@ std::any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
   // std::cerr << "calling " << func_name << std::endl;
   /*if(function_map.count(func_name) == 0)
     throw std::runtime_error("Call of undefined function \"" + func_name + "\"");*/
-  std::size_t func_ord = function_map[func_name];
-  auto [function, suite_ctx] = function_list[func_ord];
-  for(std::size_t i = 0, anon_pos = -1; i < initialize_list.size(); i++) {
-    auto [var_name, init_val] = initialize_list[i];
-    if(var_name == FunctionSuite::UnassignedName) {
-      anon_pos++;
-      /*if(i != anon_pos)
-        throw std::runtime_error("Unnamed argument before named one(s) in function call");*/
-      function.variable_space[i] = init_val;
-    } else {
-      /*if(function.variable_map.count(var_name) == 0)
-        throw std::runtime_error("Undefined argument name in call of function");*/
-      std::size_t var_ord = function.variable_map[var_name];
-      /*if(var_ord <= anon_pos)
-        throw std::runtime_error("Reassign of an position-assigned argument");*/
-      function.variable_space[var_ord] = init_val;
-    }
+  auto [function, suite_ctx] = function_list[function_map[func_name]];
+  std::size_t param_cnt = 0;
+  for(; param_cnt < initialize_list.size(); param_cnt++) {
+    if(initialize_list[param_cnt].first == FunctionSuite::UnassignedName) {
+      function.primitive_list[param_cnt].second = initialize_list[param_cnt].second;
+    } else break;
+  }
+  for(std::size_t i = 0; i < function.primitive_list.size(); i++)
+    function.variable_space.insert(function.primitive_list[i]);
+  for(; param_cnt < initialize_list.size(); param_cnt++) {
+    function.variable_space[initialize_list[param_cnt].first] = initialize_list[param_cnt].second;
   }
   /*
   for(const auto& init_val: function.variable_space)

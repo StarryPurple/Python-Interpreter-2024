@@ -2,27 +2,25 @@
 
 // class FunctionSuite
 
-const std::string FunctionSuite::UnassignedName = "#AnonVar";
+const std::string FunctionSuite::UnassignedName = "#";
 
-FunctionSuite::FunctionSuite(const Initialize_List &param_list) {
+FunctionSuite::FunctionSuite(const Initialize_List &param_list) { // &&list
   // variable_map.clear();
   // variable_space.clear();
-  for(auto [var_name, init_val]: param_list)
-    DefineVariable(var_name, init_val);
+  primitive_list = param_list;
 }
 
 
 void FunctionSuite::DefineVariable(const std::string &var_name, const std::any &init_val) {
   /*if(variable_map.find(var_name) != variable_map.end())
     throw std::runtime_error("Re-definition of variable \"" + var_name + "\"");*/
-  variable_map.insert({var_name, variable_map.size()});
-  variable_space.push_back(init_val);
+  variable_space.insert({var_name, init_val});
 }
 
 std::any &FunctionSuite::LocalVariable(const std::string &var_name) {
-  if(variable_map.find(var_name) == variable_map.end())
+  if(variable_space.find(var_name) == variable_space.end())
     DefineVariable(var_name, Interpreter::ConstNone);
-  return variable_space[variable_map[var_name]];
+  return variable_space[var_name];
 }
 
 // class PythonProject
@@ -50,14 +48,14 @@ std::any &PythonProject::Variable(const std::string &var_name) {
     pos--;
   }*/ // wrong grammar
   // local
-  if(function_stack.back().variable_map.count(var_name) > 0)
+  if(function_stack.back().variable_space.count(var_name) > 0)
     return function_stack.back().LocalVariable(var_name);
   // global
-  if(function_stack.front().variable_map.count(var_name) > 0)
+  if(function_stack.front().variable_space.count(var_name) > 0)
     return function_stack.front().LocalVariable(var_name);
   // new definition
   function_stack.back().DefineVariable(var_name, Interpreter::ConstNone);
-  return function_stack.back().variable_space[function_stack.back().variable_map[var_name]];
+  return function_stack.back().variable_space[var_name];
 }
 
 void PythonProject::CallBreak() {

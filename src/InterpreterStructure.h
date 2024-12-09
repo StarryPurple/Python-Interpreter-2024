@@ -10,17 +10,14 @@
 // waiting for further call and special modification (as a code suite)
 class FunctionSuite {
 public:
-  using Variable_Space = std::vector<std::any>;
+  using Variable_Space = std::unordered_map<std::string, std::any>;
   using Initialize_Pair = std::pair<std::string, std::any>; // name & initial value
   using Initialize_List = std::vector<Initialize_Pair>;
   static const std::string UnassignedName;
   bool break_sign = false, continue_sign = false, return_sign = false;
   std::string func_name;
   std::any result = Interpreter::Tuple();
-
-
-  // variables listed in the order that parameters are given
-  std::unordered_map<std::string, int> variable_map;
+  Initialize_List primitive_list;
   Variable_Space variable_space;
 
   FunctionSuite() = default;
